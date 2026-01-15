@@ -1,0 +1,46 @@
+output "vpc_id" {
+  description = "VPC ID"
+  value       = aws_vpc.soc_vpc.id
+}
+
+output "wazuh_server_public_ip" {
+  description = "Wazuh server public IP"
+  value       = aws_instance.wazuh_server.public_ip
+}
+
+output "wazuh_server_private_ip" {
+  description = "Wazuh server private IP"
+  value       = aws_instance.wazuh_server.private_ip
+}
+
+output "linux_endpoint_private_ip" {
+  description = "Linux endpoint private IP"
+  value       = aws_instance.linux_endpoint.private_ip
+}
+
+output "windows_endpoint_private_ip" {
+  description = "Windows endpoint private IP"
+  value       = aws_instance.windows_endpoint.private_ip
+}
+
+output "wazuh_dashboard_url" {
+  description = "Wazuh dashboard URL"
+  value       = "https://${aws_instance.wazuh_server.public_ip}"
+}
+
+output "ssh_commands" {
+  description = "SSH connection commands"
+  value = {
+    wazuh_server   = "ssh -i ~/.ssh/${var.ssh_key_name}.pem ubuntu@${aws_instance.wazuh_server.public_ip}"
+    linux_endpoint = "ssh -i ~/.ssh/${var.ssh_key_name}.pem -J ubuntu@${aws_instance.wazuh_server.public_ip} ubuntu@${aws_instance.linux_endpoint.private_ip}"
+  }
+}
+
+output "setup_summary" {
+  description = "Quick reference for next steps"
+  value = {
+    wazuh_dashboard = "https://${aws_instance.wazuh_server.public_ip}"
+    credentials_file = "SSH to Wazuh server and run: sudo tar -xvf wazuh-install-files.tar && sudo cat wazuh-install-files/wazuh-passwords.txt"
+    next_steps = "1) Wait ~10 min for installation, 2) Retrieve credentials, 3) Access dashboard, 4) Configure detection rules"
+  }
+}
