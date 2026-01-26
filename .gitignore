@@ -38,3 +38,6 @@ terraform.rc
 
 # Dev resources
 *.md
+
+# deployment data
+deployment-outputs*
