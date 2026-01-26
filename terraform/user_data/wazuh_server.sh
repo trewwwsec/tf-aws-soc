@@ -25,6 +25,79 @@ tar -xvf wazuh-install-files.tar
 systemctl enable wazuh-manager
 systemctl start wazuh-manager
 
+# Configure centralized agent configuration (Phase 3 & 4)
+echo "Configuring centralized agent settings..."
+cat > /var/ossec/etc/shared/default/agent.conf << 'AGENTCONF'
+<agent_config os="linux">
+  <!-- File Integrity Monitoring for Linux -->
+  <syscheck>
+    <directories check_all="yes" realtime="yes">/etc,/bin,/sbin,/usr/bin,/usr/sbin</directories>
+    <directories check_all="yes" report_changes="yes">/home</directories>
+    <directories check_all="yes">/root</directories>
+    <directories check_all="yes">/var/www</directories>
+    <ignore>/etc/mtab</ignore>
+    <ignore>/etc/hosts.deny</ignore>
+    <ignore>/etc/adjtime</ignore>
+    <frequency>300</frequency>
+  </syscheck>
+  
+  <!-- Log Collection for Linux -->
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/auth.log</location>
+  </localfile>
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/syslog</location>
+  </localfile>
+  <localfile>
+    <log_format>audit</log_format>
+    <location>/var/log/audit/audit.log</location>
+  </localfile>
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/secure</location>
+  </localfile>
+</agent_config>
+
+<agent_config os="windows">
+  <!-- File Integrity Monitoring for Windows -->
+  <syscheck>
+    <directories check_all="yes" realtime="yes">C:\Windows\System32</directories>
+    <directories check_all="yes">C:\Program Files</directories>
+    <directories check_all="yes" report_changes="yes">C:\Users</directories>
+    <directories check_all="yes">C:\Windows\System32\config</directories>
+    <ignore type="sregex">.log$</ignore>
+    <frequency>300</frequency>
+  </syscheck>
+  
+  <!-- Windows Event Log Collection -->
+  <localfile>
+    <location>Security</location>
+    <log_format>eventchannel</log_format>
+    <query>Event/System[EventID != 5145 and EventID != 5156 and EventID != 4688]</query>
+  </localfile>
+  <localfile>
+    <location>System</location>
+    <log_format>eventchannel</log_format>
+  </localfile>
+  <localfile>
+    <location>Application</location>
+    <log_format>eventchannel</log_format>
+  </localfile>
+  <localfile>
+    <location>Microsoft-Windows-Sysmon/Operational</location>
+    <log_format>eventchannel</log_format>
+  </localfile>
+  <localfile>
+    <location>Microsoft-Windows-PowerShell/Operational</location>
+    <log_format>eventchannel</log_format>
+  </localfile>
+</agent_config>
+AGENTCONF
+
+echo "Agent configuration deployed to /var/ossec/etc/shared/default/agent.conf"
+
 # Install CloudWatch agent (optional for monitoring)
 echo "Installing CloudWatch agent..."
 wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
