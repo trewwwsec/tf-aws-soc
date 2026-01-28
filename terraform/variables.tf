@@ -37,7 +37,7 @@ variable "private_subnet_cidr" {
 variable "allowed_ssh_cidr" {
   description = "CIDR blocks allowed to SSH (YOUR IP ONLY)"
   type        = list(string)
-  default     = ["73.162.120.46/32"] # Your public IP
+  default     = ["[ALLOWED_IP_ADDRESSES]"] # Your public or allowed IP(s)
 }
 
 variable "wazuh_instance_type" {
