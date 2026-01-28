@@ -1,0 +1,414 @@
+<!--
+  Custom Detection Rules for Cloud SOC Platform
+  Author: Security Operations Team
+  Last Updated: 2026-01-28
+  
+  MITRE ATT&CK Framework Mapped
+  Severity Levels:
+    - 3-5: Informational
+    - 6-9: Low-Medium
+    - 10-12: High
+    - 13-15: Critical
+-->
+
+<group name="local,syslog,sshd,">
+
+<!-- ========================================
+     SSH BRUTE FORCE DETECTION
+     MITRE: T1110 - Brute Force
+     ======================================== -->
+
+<!-- Detect multiple failed SSH login attempts -->
+<rule id="100001" level="10" frequency="5" timeframe="120">
+  <if_matched_sid>5710</if_matched_sid>
+  <description>SSH brute force attack detected (5+ failures in 2 minutes)</description>
+  <mitre>
+    <id>T1110</id>
+  </mitre>
+  <group>authentication_failures,pci_dss_10.2.4,pci_dss_10.2.5,gdpr_IV_35.7.d,gdpr_IV_32.2,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.7,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- Successful login after brute force attempts -->
+<rule id="100002" level="12">
+  <if_sid>5715</if_sid>
+  <if_fts></if_fts>
+  <description>SSH brute force - successful login after multiple failures (CRITICAL)</description>
+  <mitre>
+    <id>T1110</id>
+  </mitre>
+  <group>authentication_success,pci_dss_10.2.5,gdpr_IV_35.7.d,gdpr_IV_32.2,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.7,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- SSH login from unusual location -->
+<rule id="100003" level="8">
+  <if_sid>5715</if_sid>
+  <time>2 am - 6 am</time>
+  <description>SSH login during unusual hours (2 AM - 6 AM)</description>
+  <mitre>
+    <id>T1078</id>
+  </mitre>
+  <group>authentication_success,</group>
+</rule>
+
+<!-- ========================================
+     POWERSHELL ABUSE DETECTION
+     MITRE: T1059.001 - PowerShell
+     ======================================== -->
+
+<!-- Encoded PowerShell commands -->
+<rule id="100010" level="12">
+  <if_sid>60009</if_sid>
+  <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)-enc.*|encodedcommand|frombase64string</field>
+  <description>Encoded PowerShell command detected (obfuscation)</description>
+  <mitre>
+    <id>T1059.001</id>
+    <id>T1027</id>
+  </mitre>
+  <group>powershell,pci_dss_10.6.1,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AU.6,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- PowerShell download cradle -->
+<rule id="100011" level="12">
+  <if_sid>60009</if_sid>
+  <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)iex.*downloadstring|invoke-webrequest.*iex|iwr.*iex|curl.*iex|wget.*iex</field>
+  <description>PowerShell download cradle detected (remote code execution)</description>
+  <mitre>
+    <id>T1059.001</id>
+    <id>T1105</id>
+  </mitre>
+  <group>powershell,pci_dss_10.6.1,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AU.6,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- PowerShell execution policy bypass -->
+<rule id="100012" level="10">
+  <if_sid>60009</if_sid>
+  <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)-executionpolicy\s+(bypass|unrestricted)</field>
+  <description>PowerShell execution policy bypass detected</description>
+  <mitre>
+    <id>T1059.001</id>
+    <id>T1562.001</id>
+  </mitre>
+  <group>powershell,</group>
+</rule>
+
+<!-- Mimikatz detection -->
+<rule id="100013" level="15">
+  <if_sid>60009</if_sid>
+  <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)mimikatz|invoke-mimikatz|dumpcreds|sekurlsa|kerberos::golden</field>
+  <description>Mimikatz credential dumping tool detected (CRITICAL)</description>
+  <mitre>
+    <id>T1003.001</id>
+    <id>T1558.001</id>
+  </mitre>
+  <group>powershell,credential_access,pci_dss_10.6.1,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AU.6,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- PowerShell Invoke-Expression with suspicious patterns -->
+<rule id="100014" level="10">
+  <if_sid>60009</if_sid>
+  <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)invoke-expression|iex\s+\(</field>
+  <description>PowerShell Invoke-Expression detected (potential code injection)</description>
+  <mitre>
+    <id>T1059.001</id>
+  </mitre>
+  <group>powershell,</group>
+</rule>
+
+<!-- ========================================
+     PRIVILEGE ESCALATION
+     MITRE: T1548.003 - Sudo and Sudo Caching
+     ======================================== -->
+
+<!-- Base sudo command (informational) -->
+<rule id="100020" level="3">
+  <if_sid>5401</if_sid>
+  <description>Sudo command executed</description>
+  <mitre>
+    <id>T1548.003</id>
+  </mitre>
+  <group>privilege_escalation,</group>
+</rule>
+
+<!-- Suspicious sudo commands -->
+<rule id="100021" level="10">
+  <if_sid>100020</if_sid>
+  <field name="command" type="pcre2">(?i)su\s+-|/bin/bash|/bin/sh|nc\s+|python|perl|ruby|php</field>
+  <description>Suspicious sudo command executed (shell/scripting interpreter)</description>
+  <mitre>
+    <id>T1548.003</id>
+    <id>T1059</id>
+  </mitre>
+  <group>privilege_escalation,pci_dss_10.2.5,pci_dss_10.2.2,gdpr_IV_35.7.d,gdpr_IV_32.2,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.6,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- Sudo to root shell -->
+<rule id="100022" level="12">
+  <if_sid>100020</if_sid>
+  <field name="command" type="pcre2">sudo\s+su\s*$|sudo\s+-i|sudo\s+bash</field>
+  <description>Sudo escalation to root shell detected</description>
+  <mitre>
+    <id>T1548.003</id>
+  </mitre>
+  <group>privilege_escalation,</group>
+</rule>
+
+<!-- ========================================
+     ACCOUNT CREATION & MODIFICATION
+     MITRE: T1136.001 - Create Account: Local
+     ======================================== -->
+
+<!-- New Linux user created -->
+<rule id="100030" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.key">identity</field>
+  <field name="auditd.file">/etc/passwd</field>
+  <description>New Linux user account created</description>
+  <mitre>
+    <id>T1136.001</id>
+  </mitre>
+  <group>account_creation,pci_dss_10.2.5,pci_dss_8.1.2,gdpr_IV_35.7.d,gdpr_IV_32.2,hipaa_164.312.a.2.I,hipaa_164.312.a.2.II,nist_800_53_AU.14,nist_800_53_AC.2,nist_800_53_IA.4,tsc_CC6.8,</group>
+</rule>
+
+<!-- New Windows user created -->
+<rule id="100031" level="10">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">4720</field>
+  <description>New Windows user account created</description>
+  <mitre>
+    <id>T1136.001</id>
+  </mitre>
+  <group>account_creation,pci_dss_10.2.5,pci_dss_8.1.2,gdpr_IV_35.7.d,gdpr_IV_32.2,hipaa_164.312.a.2.I,nist_800_53_AU.14,nist_800_53_AC.2,tsc_CC6.8,</group>
+</rule>
+
+<!-- User added to privileged group (Linux) -->
+<rule id="100032" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.key">identity</field>
+  <field name="auditd.file" type="pcre2">/etc/group|/etc/sudoers</field>
+  <description>User added to privileged group (sudo/wheel/admin)</description>
+  <mitre>
+    <id>T1078.003</id>
+  </mitre>
+  <group>privilege_escalation,account_modification,</group>
+</rule>
+
+<!-- User added to Administrators group (Windows) -->
+<rule id="100033" level="12">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">4732</field>
+  <field name="win.eventdata.targetUserName" type="pcre2">(?i)administrators|domain admins</field>
+  <description>User added to Windows Administrators group</description>
+  <mitre>
+    <id>T1078.002</id>
+  </mitre>
+  <group>privilege_escalation,account_modification,</group>
+</rule>
+
+<!-- ========================================
+     PERSISTENCE MECHANISMS
+     MITRE: T1053 - Scheduled Task/Job
+     ======================================== -->
+
+<!-- Cron job created (Linux) -->
+<rule id="100060" level="10">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">/etc/cron|/var/spool/cron</field>
+  <description>Cron job created or modified (persistence mechanism)</description>
+  <mitre>
+    <id>T1053.003</id>
+  </mitre>
+  <group>persistence,file_integrity,pci_dss_11.5,gdpr_IV_35.7.d,nist_800_53_SI.7,tsc_PI1.4,tsc_PI1.5,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- Systemd service created -->
+<rule id="100061" level="10">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">/etc/systemd/system|/lib/systemd/system</field>
+  <description>Systemd service created or modified (persistence)</description>
+  <mitre>
+    <id>T1543.002</id>
+  </mitre>
+  <group>persistence,file_integrity,</group>
+</rule>
+
+<!-- Windows scheduled task created -->
+<rule id="100062" level="10">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">4698</field>
+  <description>Windows scheduled task created (persistence mechanism)</description>
+  <mitre>
+    <id>T1053.005</id>
+  </mitre>
+  <group>persistence,pci_dss_10.6.1,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AU.6,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- Windows service created -->
+<rule id="100063" level="10">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">7045</field>
+  <description>New Windows service created (persistence mechanism)</description>
+  <mitre>
+    <id>T1543.003</id>
+  </mitre>
+  <group>persistence,</group>
+</rule>
+
+<!-- ========================================
+     CREDENTIAL ACCESS
+     MITRE: T1003 - OS Credential Dumping
+     ======================================== -->
+
+<!-- Shadow file accessed (Linux) -->
+<rule id="100070" level="15">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.file">/etc/shadow</field>
+  <description>Shadow password file accessed (credential dumping attempt)</description>
+  <mitre>
+    <id>T1003.008</id>
+  </mitre>
+  <group>credential_access,pci_dss_10.2.1,gdpr_IV_35.7.d,gdpr_IV_32.2,hipaa_164.312.b,nist_800_53_AU.14,nist_800_53_AC.7,tsc_CC6.1,tsc_CC6.8,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- LSASS process accessed (Windows) -->
+<rule id="100071" level="15">
+  <if_sid>61600</if_sid>
+  <field name="win.system.eventID">10</field>
+  <field name="win.eventdata.targetImage" type="pcre2">(?i)lsass\.exe</field>
+  <description>LSASS process accessed (credential dumping via Sysmon)</description>
+  <mitre>
+    <id>T1003.001</id>
+  </mitre>
+  <group>credential_access,sysmon,pci_dss_10.6.1,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AU.6,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+<!-- SAM/SECURITY registry hive access -->
+<rule id="100072" level="15">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">4663</field>
+  <field name="win.eventdata.objectName" type="pcre2">(?i)\\SAM$|\\SECURITY$|\\config\\SAM|\\config\\SECURITY</field>
+  <description>SAM or SECURITY registry hive accessed (credential dumping)</description>
+  <mitre>
+    <id>T1003.002</id>
+  </mitre>
+  <group>credential_access,</group>
+</rule>
+
+<!-- ========================================
+     FILE INTEGRITY MONITORING
+     MITRE: T1222 - File Permissions Modification
+     ======================================== -->
+
+<!-- Critical system file modified (Linux) -->
+<rule id="100050" level="12">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">/etc/passwd|/etc/shadow|/etc/sudoers|/etc/ssh/sshd_config</field>
+  <description>Critical system file modified</description>
+  <mitre>
+    <id>T1222.002</id>
+  </mitre>
+  <group>file_integrity,pci_dss_11.5,gdpr_IV_35.7.d,nist_800_53_SI.7,tsc_PI1.4,tsc_PI1.5,tsc_CC6.1,tsc_CC6.8,</group>
+</rule>
+
+<!-- SSH authorized_keys modified -->
+<rule id="100051" level="12">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">authorized_keys</field>
+  <description>SSH authorized_keys file modified (backdoor access)</description>
+  <mitre>
+    <id>T1098.004</id>
+  </mitre>
+  <group>file_integrity,persistence,</group>
+</rule>
+
+<!-- Bash history deleted -->
+<rule id="100052" level="10">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">\.bash_history|\.zsh_history</field>
+  <match>deleted</match>
+  <description>Bash history file deleted (anti-forensics)</description>
+  <mitre>
+    <id>T1070.003</id>
+  </mitre>
+  <group>file_integrity,defense_evasion,</group>
+</rule>
+
+<!-- Windows Startup folder modification -->
+<rule id="100053" level="12">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)Startup|Start Menu\\Programs\\Startup</field>
+  <description>Windows Startup folder modified (persistence)</description>
+  <mitre>
+    <id>T1547.001</id>
+  </mitre>
+  <group>file_integrity,persistence,</group>
+</rule>
+
+<!-- ========================================
+     NETWORK ACTIVITY
+     MITRE: T1071 - Application Layer Protocol
+     ======================================== -->
+
+<!-- Suspicious network tool executed -->
+<rule id="100040" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.key">suspicious_network</field>
+  <description>Suspicious network tool executed (nc/ncat/socat)</description>
+  <mitre>
+    <id>T1071</id>
+  </mitre>
+  <group>network_activity,</group>
+</rule>
+
+<!-- Reverse shell patterns -->
+<rule id="100041" level="15">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)nc|ncat|socat|netcat</field>
+  <field name="auditd.a0" type="pcre2">-e|--exec|-c</field>
+  <description>Reverse shell command detected (CRITICAL)</description>
+  <mitre>
+    <id>T1059</id>
+    <id>T1071</id>
+  </mitre>
+  <group>network_activity,command_execution,</group>
+</rule>
+
+<!-- ========================================
+     DEFENSE EVASION
+     MITRE: T1562.001 - Disable Security Tools
+     ======================================== -->
+
+<!-- Firewall disabled (Linux) -->
+<rule id="100080" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)ufw|iptables|firewalld</field>
+  <field name="auditd.a0" type="pcre2">(?i)disable|stop|flush</field>
+  <description>Firewall disabled or flushed (defense evasion)</description>
+  <mitre>
+    <id>T1562.004</id>
+  </mitre>
+  <group>defense_evasion,</group>
+</rule>
+
+<!-- Windows Defender disabled -->
+<rule id="100081" level="12">
+  <if_sid>60009</if_sid>
+  <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)Set-MpPreference.*DisableRealtimeMonitoring.*True</field>
+  <description>Windows Defender real-time protection disabled</description>
+  <mitre>
+    <id>T1562.001</id>
+  </mitre>
+  <group>defense_evasion,powershell,</group>
+</rule>
+
+<!-- Audit logging disabled -->
+<rule id="100082" level="15">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">1102</field>
+  <description>Windows audit log cleared (CRITICAL - anti-forensics)</description>
+  <mitre>
+    <id>T1070.001</id>
+  </mitre>
+  <group>defense_evasion,pci_dss_10.5.2,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AU.6,tsc_CC7.2,tsc_CC7.3,</group>
+</rule>
+
+</group>
