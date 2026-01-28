@@ -36,8 +36,8 @@ terraform.rc
 # Optional: ignore tf lock file (if managing provider versions globally or individually)
 # .terraform.lock.hcl
 
-# Dev resources
-*.md
+# Dev resources (only root-level markdown files)
+/*.md
 
 # deployment data
 deployment-outputs*
