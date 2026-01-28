@@ -41,3 +41,4 @@ terraform.rc
 
 # deployment data
 deployment-outputs*
+deployments-outputs*
