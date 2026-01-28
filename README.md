@@ -4,9 +4,10 @@
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-purple?style=for-the-badge&logo=terraform)](https://www.terraform.io/)
 [![Wazuh](https://img.shields.io/badge/Wazuh-SIEM-blue?style=for-the-badge)](https://wazuh.com/)
 [![MITRE ATT&CK](https://img.shields.io/badge/MITRE-ATT%26CK-red?style=for-the-badge)](https://attack.mitre.org/)
+[![AI Powered](https://img.shields.io/badge/AI-Powered-blueviolet?style=for-the-badge&logo=openai)](ai-analyst/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-> **A production-ready Cloud Security Operations Center (SOC) built with Infrastructure as Code, featuring 30+ MITRE ATT&CK-mapped detection rules, automated attack simulations, and comprehensive incident response playbooks.**
+> **A production-ready Cloud Security Operations Center (SOC) built with Infrastructure as Code, featuring 30+ MITRE ATT&CK-mapped detection rules, AI-powered alert analysis, automated attack simulations, and comprehensive incident response playbooks.**
 
 ---
 
@@ -20,6 +21,7 @@
 - [Detection Rules](#-detection-rules)
 - [Attack Simulations](#-attack-simulations)
 - [Incident Response](#-incident-response)
+- [AI Alert Analyst](#-ai-alert-analyst)
 - [Documentation](#-documentation)
 - [Metrics & KPIs](#-metrics--kpis)
 - [Skills Demonstrated](#-skills-demonstrated)
@@ -35,6 +37,7 @@ This project demonstrates the design and implementation of a **complete Cloud Se
 ### 💡 Key Highlights
 
 - **30+ Custom Detection Rules** mapped to MITRE ATT&CK framework
+- **AI-Powered Alert Analysis** with LLM integration for intelligent triage
 - **Automated Attack Simulations** based on Atomic Red Team
 - **Complete Incident Response Playbooks** following NIST SP 800-61r2
 - **Infrastructure as Code** with Terraform for reproducible deployments
@@ -84,6 +87,14 @@ This project demonstrates the design and implementation of a **complete Cloud Se
 | **Detailed Playbooks** | Step-by-step response guides |
 | **Evidence Collection** | Automated forensic gathering |
 | **Chain of Custody** | Proper evidence handling |
+
+### 🤖 AI Alert Analyst
+| Feature | Description |
+|---------|-------------|
+| **LLM Integration** | OpenAI, Anthropic, or local Ollama |
+| **Intelligent Summaries** | Context-aware alert explanations |
+| **Playbook Linking** | Auto-links to relevant IR playbooks |
+| **Threat Intel Enrichment** | IP reputation and historical analysis |
 
 ---
 
@@ -261,6 +272,19 @@ tf-aws-soc/
 │       ├── 04-incident-response-workflow.md
 │       └── 05-detection-pipeline.md
 │
+├── 📁 ai-analyst/                   # AI-Powered Analysis
+│   ├── README.md                    # Feature documentation
+│   ├── requirements.txt             # Python dependencies
+│   ├── src/
+│   │   ├── analyze_alert.py         # Main CLI tool
+│   │   ├── ai_client.py             # LLM integration
+│   │   ├── alert_enricher.py        # Context gathering
+│   │   └── wazuh_client.py          # Wazuh API client
+│   ├── config/
+│   │   └── settings.yaml            # Configuration
+│   └── prompts/
+│       └── analyze_alert.txt        # AI prompt templates
+│
 └── README.md                        # This file
 ```
 
@@ -400,6 +424,74 @@ Preparation → Detection & Analysis → Containment → Eradication → Recover
 
 ---
 
+## 🤖 AI Alert Analyst
+
+### Overview
+
+The AI Alert Analyst uses large language models (LLMs) to automatically enrich security alerts with:
+- **Meaningful Titles** - Human-readable alert names instead of rule IDs
+- **Context Summaries** - Executive-friendly explanations of what happened
+- **Investigation Steps** - Specific actions for analysts to take
+- **Playbook Links** - Direct links to relevant IR playbooks
+- **Threat Intelligence** - IP reputation and historical analysis
+
+### Quick Start
+
+```bash
+# Install dependencies
+cd ai-analyst
+pip install -r requirements.txt
+
+# Set API key (choose one)
+export OPENAI_API_KEY="your-key"
+# OR
+export ANTHROPIC_API_KEY="your-key"
+
+# Run demo analysis
+python src/analyze_alert.py --demo
+```
+
+### Example Output
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                    AI ALERT ANALYSIS                             ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📋 ALERT: Targeted SSH Brute Force Against Root Account
+   Rule: 100001 | Severity: HIGH | Time: 2026-01-28 14:32:15 UTC
+
+🎯 SUMMARY:
+   An automated SSH brute force attack was detected targeting the 
+   root account on linux-endpoint-01. The attack originated from 
+   IP 203.0.113.45 with 47 failed attempts over 3 minutes.
+
+🔍 INVESTIGATION STEPS:
+   1. Verify no successful logins from 203.0.113.45
+   2. Check for other systems targeted by this IP
+   3. Review authentication logs for targeted user
+
+🛡️ RECOMMENDED ACTIONS:
+   1. [IMMEDIATE] Block IP 203.0.113.45 at firewall
+   2. [SHORT-TERM] Enable fail2ban if not active
+   3. [LONG-TERM] Disable root SSH login
+
+📖 PLAYBOOK: SSH Brute Force Response (IR-PB-001)
+🏷️ MITRE ATT&CK: T1110.001 - Brute Force: Password Guessing
+```
+
+### Supported Providers
+
+| Provider | Model | API Key Variable |
+|----------|-------|------------------|
+| **OpenAI** | GPT-4, GPT-3.5 | `OPENAI_API_KEY` |
+| **Anthropic** | Claude 3 | `ANTHROPIC_API_KEY` |
+| **Ollama** | Llama 2, Mistral | Local (no key needed) |
+
+📚 **[View AI Analyst Documentation →](ai-analyst/)**
+
+---
+
 ## 📚 Documentation
 
 ### Architecture Diagrams
@@ -449,7 +541,8 @@ Preparation → Detection & Analysis → Containment → Eradication → Recover
 | **Attack Simulations** | 6 | 1,433 |
 | **Incident Response** | 5 | 2,059 |
 | **Architecture Diagrams** | 5 | 1,292 |
-| **TOTAL** | **29** | **7,400+** |
+| **AI Alert Analyst** | 8 | 1,500+ |
+| **TOTAL** | **37** | **8,900+** |
 
 ---
 
@@ -462,8 +555,9 @@ Preparation → Detection & Analysis → Containment → Eradication → Recover
 | **Cloud** | AWS VPC, EC2, Security Groups, NAT Gateway, IAM |
 | **Infrastructure** | Terraform, Infrastructure as Code, Version Control |
 | **Security** | SIEM (Wazuh), Detection Engineering, Log Analysis |
+| **AI/ML** | LLM Integration, OpenAI API, Prompt Engineering |
 | **Networking** | TCP/IP, Firewalls, Network Segmentation |
-| **Scripting** | Bash, PowerShell, Automation |
+| **Scripting** | Python, Bash, PowerShell, Automation |
 | **OS** | Linux (Ubuntu), Windows Server |
 
 ### Security Skills

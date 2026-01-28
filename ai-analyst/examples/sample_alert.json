@@ -1,0 +1,51 @@
+{
+    "timestamp": "2026-01-28T10:32:15.000Z",
+    "rule": {
+        "id": "100001",
+        "level": 10,
+        "description": "SSH brute force attack detected",
+        "mitre": {
+            "id": [
+                "T1110"
+            ],
+            "tactic": [
+                "Credential Access"
+            ],
+            "technique": [
+                "Brute Force"
+            ]
+        },
+        "groups": [
+            "authentication_failures",
+            "brute_force",
+            "PCI_DSS_10.2.4"
+        ]
+    },
+    "agent": {
+        "id": "001",
+        "name": "linux-endpoint-01",
+        "ip": "10.0.2.155"
+    },
+    "manager": {
+        "name": "wazuh-server"
+    },
+    "full_log": "Jan 28 10:32:15 linux-endpoint-01 sshd[12345]: Failed password for root from 203.0.113.45 port 54321 ssh2",
+    "data": {
+        "srcip": "203.0.113.45",
+        "srcport": "54321",
+        "dstuser": "root",
+        "program_name": "sshd",
+        "pid": "12345"
+    },
+    "location": "/var/log/auth.log",
+    "decoder": {
+        "name": "sshd"
+    },
+    "previous_alerts": [
+        {
+            "rule_id": "5551",
+            "count": 47,
+            "timeframe": "180 seconds"
+        }
+    ]
+}

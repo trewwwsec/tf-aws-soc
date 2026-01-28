@@ -1,0 +1,99 @@
+# AI Alert Analyst Configuration
+# Copy to settings.yaml and customize
+
+# AI Provider Settings
+ai:
+  # Provider: openai, anthropic, or ollama
+  provider: "openai"
+  
+  # Model selection
+  openai_model: "gpt-4"
+  anthropic_model: "claude-3-sonnet-20240229"
+  ollama_model: "llama2"
+  
+  # Generation parameters
+  temperature: 0.3
+  max_tokens: 2000
+
+# Wazuh API Settings
+wazuh:
+  host: "localhost"
+  port: 55000
+  user: "wazuh-api"
+  # Password should be set via WAZUH_PASSWORD env var
+  ssl_verify: false
+
+# Enrichment Settings
+enrichment:
+  # Enable threat intelligence lookups
+  enable_threat_intel: true
+  
+  # Enable IP geolocation
+  enable_geolocation: true
+  
+  # Enable historical event analysis
+  enable_historical: true
+  
+  # Hours to look back for historical events
+  historical_hours: 24
+  
+  # Threat intel sources (requires API keys)
+  threat_intel_sources:
+    - abuseipdb
+    - virustotal
+
+# Output Settings
+output:
+  # Format: terminal, json, markdown
+  format: "terminal"
+  
+  # Include raw alert data in output
+  include_raw_alert: false
+  
+  # Include AI recommendations
+  include_recommendations: true
+  
+  # Color output for terminal
+  use_colors: true
+
+# Logging Settings
+logging:
+  level: "INFO"
+  file: "logs/ai-analyst.log"
+  max_size_mb: 10
+  backup_count: 5
+
+# Alert Processing Settings
+processing:
+  # Minimum severity level to process (0-15)
+  min_level: 5
+  
+  # Rule IDs to always analyze (even if below min_level)
+  priority_rules:
+    - "100001"  # SSH brute force
+    - "100013"  # Mimikatz
+    - "100070"  # Shadow file access
+    - "100071"  # LSASS access
+  
+  # Rule IDs to skip analysis
+  skip_rules: []
+
+# Playbook Mapping
+playbooks:
+  base_path: "../incident-response/playbooks"
+  
+  # Automatic playbook selection based on attack type
+  attack_type_mapping:
+    brute_force: "ssh-brute-force.md"
+    credential_theft: "credential-dumping.md"
+    privilege_escalation: "privilege-escalation.md"
+    persistence: "persistence.md"
+    default: "general-incident.md"
+
+# API Server Settings (for REST API mode)
+api:
+  host: "0.0.0.0"
+  port: 8080
+  enable_cors: true
+  require_auth: false
+  # auth_token: "set-via-env-var"
