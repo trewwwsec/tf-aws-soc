@@ -1,0 +1,431 @@
+<!--
+  macOS Detection Rules for Cloud SOC Platform
+  Author: Security Operations Team
+  Last Updated: 2026-01-28
+  
+  MITRE ATT&CK Framework Mapped - macOS Specific
+  These rules complement the main local_rules.xml file
+  
+  Severity Levels:
+    - 3-5: Informational
+    - 6-9: Low-Medium
+    - 10-12: High
+    - 13-15: Critical
+-->
+
+<group name="local,syslog,macos,">
+
+<!-- ========================================
+     MACOS PERSISTENCE MECHANISMS
+     MITRE: T1543.001 - Launch Agent
+            T1543.004 - Launch Daemon
+     ======================================== -->
+
+<!-- Launch Agent created (user-level persistence) -->
+<rule id="100200" level="10">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)Library/LaunchAgents/.*\.plist</field>
+  <description>macOS Launch Agent created (user-level persistence)</description>
+  <mitre>
+    <id>T1543.001</id>
+  </mitre>
+  <group>persistence,macos,pci_dss_11.5,</group>
+</rule>
+
+<!-- Launch Daemon created (system-level persistence) -->
+<rule id="100201" level="12">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)/Library/LaunchDaemons/.*\.plist|/System/Library/LaunchDaemons</field>
+  <description>macOS Launch Daemon created (system-level persistence - CRITICAL)</description>
+  <mitre>
+    <id>T1543.004</id>
+  </mitre>
+  <group>persistence,macos,pci_dss_11.5,</group>
+</rule>
+
+<!-- Login Items modified -->
+<rule id="100202" level="10">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)com\.apple\.loginitems\.plist|loginwindow\.plist</field>
+  <description>macOS Login Items modified (startup persistence)</description>
+  <mitre>
+    <id>T1547.015</id>
+  </mitre>
+  <group>persistence,macos,</group>
+</rule>
+
+<!-- Cron job created on macOS -->
+<rule id="100203" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.file" type="pcre2">/var/at/tabs|/usr/lib/cron/tabs</field>
+  <description>macOS cron job created or modified</description>
+  <mitre>
+    <id>T1053.003</id>
+  </mitre>
+  <group>persistence,macos,</group>
+</rule>
+
+<!-- Periodic scripts modified -->
+<rule id="100204" level="10">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">/etc/periodic/(daily|weekly|monthly)</field>
+  <description>macOS periodic script modified (scheduled persistence)</description>
+  <mitre>
+    <id>T1053.003</id>
+  </mitre>
+  <group>persistence,macos,</group>
+</rule>
+
+<!-- ========================================
+     MACOS EXECUTION
+     MITRE: T1059.002 - AppleScript
+            T1059.004 - Unix Shell
+     ======================================== -->
+
+<!-- osascript execution (AppleScript) -->
+<rule id="100210" level="8">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)/usr/bin/osascript</field>
+  <description>macOS osascript (AppleScript) executed</description>
+  <mitre>
+    <id>T1059.002</id>
+  </mitre>
+  <group>execution,macos,</group>
+</rule>
+
+<!-- osascript with JavaScript -->
+<rule id="100211" level="10">
+  <if_sid>100210</if_sid>
+  <field name="auditd.a0" type="pcre2">(?i)-l\s*JavaScript|JXA</field>
+  <description>macOS osascript with JavaScript execution (JXA)</description>
+  <mitre>
+    <id>T1059.007</id>
+  </mitre>
+  <group>execution,macos,</group>
+</rule>
+
+<!-- osascript executing shell commands -->
+<rule id="100212" level="12">
+  <if_sid>100210</if_sid>
+  <field name="auditd.a0" type="pcre2">(?i)do shell script|bash|sh -c</field>
+  <description>macOS osascript executing shell commands (suspicious)</description>
+  <mitre>
+    <id>T1059.002</id>
+    <id>T1059.004</id>
+  </mitre>
+  <group>execution,macos,</group>
+</rule>
+
+<!-- Suspicious curl/wget with execution -->
+<rule id="100213" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)curl|wget</field>
+  <field name="auditd.a0" type="pcre2">(?i)\|\s*(bash|sh|python|perl|ruby)|>\s*/tmp/</field>
+  <description>macOS download and execute pattern detected</description>
+  <mitre>
+    <id>T1059.004</id>
+    <id>T1105</id>
+  </mitre>
+  <group>execution,macos,</group>
+</rule>
+
+<!-- ========================================
+     MACOS CREDENTIAL ACCESS
+     MITRE: T1555.001 - Keychain
+            T1555.003 - Browser Credentials
+     ======================================== -->
+
+<!-- Keychain access by non-standard process -->
+<rule id="100220" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)security</field>
+  <field name="auditd.a0" type="pcre2">(?i)dump-keychain|find-generic-password|export</field>
+  <description>macOS Keychain credential extraction detected</description>
+  <mitre>
+    <id>T1555.001</id>
+  </mitre>
+  <group>credential_access,macos,pci_dss_10.2.5,</group>
+</rule>
+
+<!-- Keychain file access -->
+<rule id="100221" level="10">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)\.keychain-db$|login\.keychain</field>
+  <description>macOS Keychain database accessed</description>
+  <mitre>
+    <id>T1555.001</id>
+  </mitre>
+  <group>credential_access,macos,</group>
+</rule>
+
+<!-- Safari credentials accessed -->
+<rule id="100222" level="12">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)Safari/Passwords\.plist|Safari/LocalStorage</field>
+  <description>macOS Safari credential files accessed</description>
+  <mitre>
+    <id>T1555.003</id>
+  </mitre>
+  <group>credential_access,macos,</group>
+</rule>
+
+<!-- Chrome credentials accessed -->
+<rule id="100223" level="12">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)Chrome/Default/Login Data|Chrome/Default/Cookies</field>
+  <description>macOS Chrome credential/cookie files accessed</description>
+  <mitre>
+    <id>T1555.003</id>
+    <id>T1539</id>
+  </mitre>
+  <group>credential_access,macos,</group>
+</rule>
+
+<!-- SSH private key access -->
+<rule id="100224" level="10">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)\.ssh/id_rsa$|\.ssh/id_ed25519$|\.ssh/id_ecdsa$</field>
+  <description>macOS SSH private key accessed</description>
+  <mitre>
+    <id>T1552.004</id>
+  </mitre>
+  <group>credential_access,macos,</group>
+</rule>
+
+<!-- ========================================
+     MACOS DEFENSE EVASION
+     MITRE: T1553.001 - Gatekeeper Bypass
+            T1562.001 - Disable Security Tools
+     ======================================== -->
+
+<!-- Gatekeeper bypass attempt -->
+<rule id="100230" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)spctl|xattr</field>
+  <field name="auditd.a0" type="pcre2">(?i)--master-disable|--disable|com\.apple\.quarantine</field>
+  <description>macOS Gatekeeper bypass attempt detected</description>
+  <mitre>
+    <id>T1553.001</id>
+  </mitre>
+  <group>defense_evasion,macos,</group>
+</rule>
+
+<!-- SIP status check (potential bypass recon) -->
+<rule id="100231" level="6">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)csrutil</field>
+  <description>macOS SIP (System Integrity Protection) status checked</description>
+  <mitre>
+    <id>T1518.001</id>
+  </mitre>
+  <group>discovery,macos,</group>
+</rule>
+
+<!-- TCC database access (privacy bypass) -->
+<rule id="100232" level="15">
+  <if_sid>550</if_sid>
+  <field name="file" type="pcre2">(?i)TCC\.db</field>
+  <description>macOS TCC database accessed (CRITICAL - privacy bypass)</description>
+  <mitre>
+    <id>T1562</id>
+  </mitre>
+  <group>defense_evasion,macos,pci_dss_10.2.5,</group>
+</rule>
+
+<!-- XProtect/MRT disabled -->
+<rule id="100233" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)defaults</field>
+  <field name="auditd.a0" type="pcre2">(?i)XProtect|MRT</field>
+  <description>macOS XProtect or MRT modification attempt</description>
+  <mitre>
+    <id>T1562.001</id>
+  </mitre>
+  <group>defense_evasion,macos,</group>
+</rule>
+
+<!-- Firewall disabled -->
+<rule id="100234" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)/usr/libexec/ApplicationFirewall/socketfilterfw</field>
+  <field name="auditd.a0" type="pcre2">(?i)--setglobalstate\s+off</field>
+  <description>macOS Application Firewall disabled</description>
+  <mitre>
+    <id>T1562.004</id>
+  </mitre>
+  <group>defense_evasion,macos,</group>
+</rule>
+
+<!-- ========================================
+     MACOS DISCOVERY
+     MITRE: T1082 - System Information
+            T1016 - Network Configuration
+     ======================================== -->
+
+<!-- System profiler executed -->
+<rule id="100240" level="6">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)system_profiler</field>
+  <description>macOS system_profiler executed (system enumeration)</description>
+  <mitre>
+    <id>T1082</id>
+  </mitre>
+  <group>discovery,macos,</group>
+</rule>
+
+<!-- Network configuration discovery -->
+<rule id="100241" level="6">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)networksetup|ipconfig|ifconfig</field>
+  <description>macOS network configuration discovery</description>
+  <mitre>
+    <id>T1016</id>
+  </mitre>
+  <group>discovery,macos,</group>
+</rule>
+
+<!-- Directory Services enumeration -->
+<rule id="100242" level="8">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)dscl|dscacheutil|ldapsearch</field>
+  <description>macOS Directory Services enumeration detected</description>
+  <mitre>
+    <id>T1087.002</id>
+  </mitre>
+  <group>discovery,macos,</group>
+</rule>
+
+<!-- Installed applications enumeration -->
+<rule id="100243" level="6">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)mdfind|lsappinfo|pkgutil</field>
+  <field name="auditd.a0" type="pcre2">(?i)kMDItemKind|list|--pkgs</field>
+  <description>macOS installed applications enumeration</description>
+  <mitre>
+    <id>T1518</id>
+  </mitre>
+  <group>discovery,macos,</group>
+</rule>
+
+<!-- ========================================
+     MACOS COLLECTION
+     MITRE: T1113 - Screen Capture
+            T1115 - Clipboard Data
+     ======================================== -->
+
+<!-- Screen capture utility -->
+<rule id="100250" level="8">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)screencapture</field>
+  <description>macOS screen capture utility executed</description>
+  <mitre>
+    <id>T1113</id>
+  </mitre>
+  <group>collection,macos,</group>
+</rule>
+
+<!-- Clipboard access -->
+<rule id="100251" level="8">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)pbcopy|pbpaste</field>
+  <description>macOS clipboard access detected</description>
+  <mitre>
+    <id>T1115</id>
+  </mitre>
+  <group>collection,macos,</group>
+</rule>
+
+<!-- Find command for sensitive files -->
+<rule id="100252" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)/usr/bin/find</field>
+  <field name="auditd.a0" type="pcre2">(?i)\.pem|\.key|\.p12|password|credential|secret</field>
+  <description>macOS file search for sensitive data</description>
+  <mitre>
+    <id>T1083</id>
+    <id>T1552</id>
+  </mitre>
+  <group>collection,macos,</group>
+</rule>
+
+<!-- ========================================
+     MACOS COMMAND AND CONTROL
+     MITRE: T1071.001 - Web Protocols
+            T1572 - Protocol Tunneling
+     ======================================== -->
+
+<!-- SSH tunnel created -->
+<rule id="100260" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)/usr/bin/ssh</field>
+  <field name="auditd.a0" type="pcre2">(?i)-D\s+\d+|-L\s+\d+|-R\s+\d+</field>
+  <description>macOS SSH tunnel created (port forwarding)</description>
+  <mitre>
+    <id>T1572</id>
+  </mitre>
+  <group>command_control,macos,</group>
+</rule>
+
+<!-- Netcat/socat execution -->
+<rule id="100261" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)nc|ncat|netcat|socat</field>
+  <description>macOS network tool (nc/socat) executed</description>
+  <mitre>
+    <id>T1095</id>
+  </mitre>
+  <group>command_control,macos,network_activity,</group>
+</rule>
+
+<!-- Reverse shell pattern -->
+<rule id="100262" level="15">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)bash|sh|zsh</field>
+  <field name="auditd.a0" type="pcre2">(?i)-i\s+>\&\s*/dev/tcp|/dev/udp</field>
+  <description>macOS reverse shell detected (CRITICAL)</description>
+  <mitre>
+    <id>T1059.004</id>
+  </mitre>
+  <group>command_control,macos,</group>
+</rule>
+
+<!-- ========================================
+     MACOS LATERAL MOVEMENT
+     MITRE: T1021.004 - SSH
+            T1021.005 - VNC
+     ======================================== -->
+
+<!-- SSH to multiple hosts -->
+<rule id="100270" level="8" frequency="5" timeframe="600">
+  <if_matched_sid>5715</if_matched_sid>
+  <same_source_ip />
+  <description>macOS SSH connections to multiple hosts (lateral movement)</description>
+  <mitre>
+    <id>T1021.004</id>
+  </mitre>
+  <group>lateral_movement,macos,</group>
+</rule>
+
+<!-- VNC/Screen Sharing initiated -->
+<rule id="100271" level="8">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)screensharingd|open.*vnc://</field>
+  <description>macOS Screen Sharing/VNC connection initiated</description>
+  <mitre>
+    <id>T1021.005</id>
+  </mitre>
+  <group>lateral_movement,macos,</group>
+</rule>
+
+<!-- Apple Remote Desktop -->
+<rule id="100272" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)ARDAgent|Remote Desktop</field>
+  <description>macOS Apple Remote Desktop activity detected</description>
+  <mitre>
+    <id>T1021.005</id>
+  </mitre>
+  <group>lateral_movement,macos,</group>
+</rule>
+
+</group>

@@ -2,14 +2,15 @@
 
 ## 🎯 Project Overview
 
-This Cloud SOC Platform includes **45 production-ready detection rules** mapped to the MITRE ATT&CK framework, covering the most critical attack techniques observed in real-world incidents.
+This Cloud SOC Platform includes **73 production-ready detection rules** mapped to the MITRE ATT&CK framework, covering the most critical attack techniques observed in real-world incidents across **Windows, Linux, and macOS**.
 
 ## 📊 Detection Statistics
 
 ### Coverage Metrics
-- **Total Rules**: 45
-- **MITRE Techniques Covered**: 35+
+- **Total Rules**: 73 (Windows/Linux: 45, macOS: 28)
+- **MITRE Techniques Covered**: 50+
 - **MITRE Tactics Covered**: 11/12 (92%)
+- **Platforms Supported**: Windows, Linux, macOS
 - **Average MTTD**: < 2 minutes
 - **Target False Positive Rate**: < 10%
 
