@@ -123,7 +123,7 @@ graph TB
 
 ### Network Topology
 
-| Component | Subnet | IP Range | Purpose |
+| Component | Subnet | IP Address | Purpose |
 |-----------|--------|----------|---------|
 | **Wazuh Server** | Public (10.0.1.0/24) | 10.0.1.100 | SIEM, Log aggregation |
 | **Linux Endpoint** | Private (10.0.2.0/24) | 10.0.2.155 | Monitored system |
