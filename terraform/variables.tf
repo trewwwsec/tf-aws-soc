@@ -57,3 +57,9 @@ variable "ssh_key_name" {
   type        = string
   default     = "cloud-soc-key"
 }
+
+variable "ssh_private_key_path" {
+  description = "Path to SSH private key for provisioner connections"
+  type        = string
+  default     = "~/.ssh/cloud-soc-key.pem"
+}

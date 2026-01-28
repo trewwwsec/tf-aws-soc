@@ -54,6 +54,74 @@ resource "aws_instance" "wazuh_server" {
   }
 }
 
+# Deploy custom detection rules after Wazuh is ready
+resource "null_resource" "deploy_detection_rules" {
+  depends_on = [aws_instance.wazuh_server]
+
+  # Trigger redeployment when rules change
+  triggers = {
+    local_rules_hash = filemd5("${path.module}/../wazuh/custom_rules/local_rules.xml")
+    macos_rules_hash = filemd5("${path.module}/../wazuh/custom_rules/macos_rules.xml")
+  }
+
+  # Wait for Wazuh to be ready
+  provisioner "local-exec" {
+    command = "echo 'Waiting for Wazuh server to initialize...' && sleep 120"
+  }
+
+  # Copy local_rules.xml
+  provisioner "file" {
+    source      = "${path.module}/../wazuh/custom_rules/local_rules.xml"
+    destination = "/tmp/local_rules.xml"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.ssh_private_key_path)
+      host        = aws_instance.wazuh_server.public_ip
+    }
+  }
+
+  # Copy macos_rules.xml
+  provisioner "file" {
+    source      = "${path.module}/../wazuh/custom_rules/macos_rules.xml"
+    destination = "/tmp/macos_rules.xml"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.ssh_private_key_path)
+      host        = aws_instance.wazuh_server.public_ip
+    }
+  }
+
+  # Deploy rules and restart Wazuh
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Deploying custom detection rules...'",
+      "sudo mv /tmp/local_rules.xml /var/ossec/etc/rules/local_rules.xml",
+      "sudo mv /tmp/macos_rules.xml /var/ossec/etc/rules/macos_rules.xml",
+      "sudo chown wazuh:wazuh /var/ossec/etc/rules/local_rules.xml",
+      "sudo chown wazuh:wazuh /var/ossec/etc/rules/macos_rules.xml",
+      "sudo chmod 660 /var/ossec/etc/rules/local_rules.xml",
+      "sudo chmod 660 /var/ossec/etc/rules/macos_rules.xml",
+      "echo 'Restarting Wazuh manager to load rules...'",
+      "sudo systemctl restart wazuh-manager",
+      "echo 'Custom detection rules deployed successfully!'",
+      "echo '  - local_rules.xml: 45 Windows/Linux rules'",
+      "echo '  - macos_rules.xml: 28 macOS rules'",
+      "echo '  - Total: 73 MITRE ATT&CK mapped rules'"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.ssh_private_key_path)
+      host        = aws_instance.wazuh_server.public_ip
+    }
+  }
+}
+
 # Linux Endpoint
 resource "aws_instance" "linux_endpoint" {
   ami                    = data.aws_ami.ubuntu.id

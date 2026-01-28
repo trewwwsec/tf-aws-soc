@@ -94,6 +94,37 @@ cat > /var/ossec/etc/shared/default/agent.conf << 'AGENTCONF'
     <log_format>eventchannel</log_format>
   </localfile>
 </agent_config>
+
+<agent_config os="macos">
+  <!-- File Integrity Monitoring for macOS -->
+  <syscheck>
+    <directories check_all="yes" realtime="yes">~/Library/LaunchAgents</directories>
+    <directories check_all="yes" realtime="yes">/Library/LaunchAgents</directories>
+    <directories check_all="yes" realtime="yes">/Library/LaunchDaemons</directories>
+    <directories check_all="yes">~/.ssh</directories>
+    <directories check_all="yes">/etc/periodic</directories>
+    <directories check_all="yes">/usr/local/bin</directories>
+    <directories check_all="yes">/Applications</directories>
+    <ignore>/Library/Logs</ignore>
+    <ignore>~/.Trash</ignore>
+    <ignore>/private/var/log</ignore>
+    <frequency>300</frequency>
+  </syscheck>
+  
+  <!-- macOS System Log Collection -->
+  <localfile>
+    <log_format>macos</log_format>
+    <location>macos</location>
+  </localfile>
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/system.log</location>
+  </localfile>
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/install.log</location>
+  </localfile>
+</agent_config>
 AGENTCONF
 
 echo "Agent configuration deployed to /var/ossec/etc/shared/default/agent.conf"
@@ -106,15 +137,31 @@ dpkg -i amazon-cloudwatch-agent.deb
 # Create completion marker
 echo "Wazuh installation complete!" > /tmp/wazuh-install-complete.txt
 
+# Get public IP for display
+PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+
 # Log system info
-echo "==================================" >> /var/log/wazuh-install.log
+echo "===================================" >> /var/log/wazuh-install.log
 echo "Wazuh Installation Complete" >> /var/log/wazuh-install.log
 echo "Timestamp: $(date)" >> /var/log/wazuh-install.log
-echo "Public IP: $(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)" >> /var/log/wazuh-install.log
-echo "Dashboard URL: https://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)" >> /var/log/wazuh-install.log
+echo "Public IP: $PUBLIC_IP" >> /var/log/wazuh-install.log
+echo "Dashboard URL: https://$PUBLIC_IP" >> /var/log/wazuh-install.log
 echo "Credentials file: /home/ubuntu/wazuh-install-files.tar" >> /var/log/wazuh-install.log
-echo "==================================" >> /var/log/wazuh-install.log
+echo "" >> /var/log/wazuh-install.log
+echo "Agent Configurations:" >> /var/log/wazuh-install.log
+echo "  - Linux, Windows, macOS agents supported" >> /var/log/wazuh-install.log
+echo "===================================" >> /var/log/wazuh-install.log
 
-echo "Wazuh installation complete!"
-echo "Access dashboard at: https://$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)"
-echo "Retrieve credentials with: sudo tar -xvf wazuh-install-files.tar && sudo cat wazuh-install-files/wazuh-passwords.txt"
+echo ""
+echo "======================================================================"
+echo "           WAZUH INSTALLATION COMPLETE                                "
+echo "======================================================================"
+echo ""
+echo "Dashboard URL: https://$PUBLIC_IP"
+echo ""
+echo "To get credentials:"
+echo "  sudo tar -xvf wazuh-install-files.tar"
+echo "  sudo cat wazuh-install-files/wazuh-passwords.txt"
+echo ""
+echo "NOTE: Custom detection rules will be deployed via Terraform provisioner"
+echo ""
