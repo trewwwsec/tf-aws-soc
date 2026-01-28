@@ -411,4 +411,248 @@
   <group>defense_evasion,pci_dss_10.5.2,gdpr_IV_35.7.d,hipaa_164.312.b,nist_800_53_AU.6,tsc_CC7.2,tsc_CC7.3,</group>
 </rule>
 
+<!-- ========================================
+     LATERAL MOVEMENT DETECTION
+     MITRE: T1021 - Remote Services
+     ======================================== -->
+
+<!-- RDP connection initiated (Windows) -->
+<rule id="100090" level="6">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">4624</field>
+  <field name="win.eventdata.logonType">10</field>
+  <description>RDP login detected (Type 10 - Remote Interactive)</description>
+  <mitre>
+    <id>T1021.001</id>
+  </mitre>
+  <group>lateral_movement,authentication_success,pci_dss_10.2.5,</group>
+</rule>
+
+<!-- RDP login from unusual source -->
+<rule id="100091" level="10">
+  <if_sid>100090</if_sid>
+  <srcip>!192.168.|!10.|!172.16.</srcip>
+  <description>RDP login from external/unusual IP address</description>
+  <mitre>
+    <id>T1021.001</id>
+    <id>T1078</id>
+  </mitre>
+  <group>lateral_movement,authentication_success,</group>
+</rule>
+
+<!-- PSExec execution detected -->
+<rule id="100092" level="12">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">7045</field>
+  <field name="win.eventdata.serviceName" type="pcre2">(?i)psexe|paexe</field>
+  <description>PSExec service installation detected (lateral movement tool)</description>
+  <mitre>
+    <id>T1021.002</id>
+    <id>T1569.002</id>
+  </mitre>
+  <group>lateral_movement,persistence,pci_dss_10.6.1,</group>
+</rule>
+
+<!-- SMB connection to admin shares -->
+<rule id="100093" level="10">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">5140</field>
+  <field name="win.eventdata.shareName" type="pcre2">(?i)ADMIN\$|C\$|IPC\$</field>
+  <description>SMB connection to administrative share detected</description>
+  <mitre>
+    <id>T1021.002</id>
+  </mitre>
+  <group>lateral_movement,pci_dss_10.2.5,</group>
+</rule>
+
+<!-- SSH to multiple hosts (potential lateral movement) -->
+<rule id="100094" level="8" frequency="5" timeframe="600">
+  <if_matched_sid>5715</if_matched_sid>
+  <same_source_ip />
+  <description>SSH connections to multiple hosts from single source (lateral movement)</description>
+  <mitre>
+    <id>T1021.004</id>
+  </mitre>
+  <group>lateral_movement,authentication_success,</group>
+</rule>
+
+<!-- WinRM remote session -->
+<rule id="100095" level="10">
+  <if_sid>60000</if_sid>
+  <field name="win.system.eventID">4624</field>
+  <field name="win.eventdata.logonType">3</field>
+  <field name="win.eventdata.authenticationPackageName" type="pcre2">(?i)credssp|kerberos</field>
+  <description>WinRM remote session detected</description>
+  <mitre>
+    <id>T1021.006</id>
+  </mitre>
+  <group>lateral_movement,authentication_success,</group>
+</rule>
+
+<!-- ========================================
+     DATA EXFILTRATION DETECTION
+     MITRE: T1041 - Exfiltration Over C2
+     ======================================== -->
+
+<!-- Large data transfer via web upload -->
+<rule id="100100" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)curl|wget|python</field>
+  <field name="auditd.a0" type="pcre2">(?i)--upload|--data|-d|POST</field>
+  <description>Potential data exfiltration via HTTP upload detected</description>
+  <mitre>
+    <id>T1041</id>
+    <id>T1048.002</id>
+  </mitre>
+  <group>data_exfiltration,network_activity,</group>
+</rule>
+
+<!-- Base64 encoded data in commands -->
+<rule id="100101" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.a0" type="pcre2">base64|openssl\s+enc</field>
+  <description>Data encoding detected (potential exfiltration preparation)</description>
+  <mitre>
+    <id>T1132.001</id>
+    <id>T1560</id>
+  </mitre>
+  <group>data_exfiltration,</group>
+</rule>
+
+<!-- DNS exfiltration patterns -->
+<rule id="100102" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)nslookup|dig|host</field>
+  <field name="auditd.a0" type="pcre2">TXT|CNAME|MX|\.{50,}</field>
+  <description>Suspicious DNS query pattern detected (potential DNS exfiltration)</description>
+  <mitre>
+    <id>T1048.003</id>
+  </mitre>
+  <group>data_exfiltration,network_activity,</group>
+</rule>
+
+<!-- Cloud storage access -->
+<rule id="100103" level="8">
+  <if_sid>60009</if_sid>
+  <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)s3\.|blob\.core|storage\.googleapis|dropbox|onedrive</field>
+  <description>Cloud storage service access detected in PowerShell</description>
+  <mitre>
+    <id>T1567.002</id>
+  </mitre>
+  <group>data_exfiltration,powershell,</group>
+</rule>
+
+<!-- Archive creation (tar/zip) of sensitive directories -->
+<rule id="100104" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)tar|zip|7z|gzip</field>
+  <field name="auditd.a0" type="pcre2">(?i)/etc|/home|/root|/var/log</field>
+  <description>Archive creation of sensitive directories detected (potential data staging)</description>
+  <mitre>
+    <id>T1560.001</id>
+  </mitre>
+  <group>data_exfiltration,collection,</group>
+</rule>
+
+<!-- ========================================
+     COLLECTION
+     MITRE: T1560 - Archive Collected Data
+     ======================================== -->
+
+<!-- Sensitive file access patterns -->
+<rule id="100110" level="10">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.file" type="pcre2">(?i)\.pem$|\.key$|\.pfx$|\.p12$|id_rsa</field>
+  <description>Access to cryptographic key file detected</description>
+  <mitre>
+    <id>T1552.004</id>
+  </mitre>
+  <group>collection,credential_access,</group>
+</rule>
+
+<!-- Browser credential file access -->
+<rule id="100111" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.file" type="pcre2">(?i)Login Data|Cookies|\.sqlite|signons\.sqlite</field>
+  <description>Browser credential/cookie file accessed</description>
+  <mitre>
+    <id>T1539</id>
+    <id>T1555.003</id>
+  </mitre>
+  <group>collection,credential_access,</group>
+</rule>
+
+<!-- Database dump commands -->
+<rule id="100112" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)mysqldump|pg_dump|mongodump|sqlite3</field>
+  <description>Database dump command executed</description>
+  <mitre>
+    <id>T1005</id>
+  </mitre>
+  <group>collection,</group>
+</rule>
+
+<!-- ========================================
+     DISCOVERY
+     MITRE: T1087 - Account Discovery
+     ======================================== -->
+
+<!-- Local account enumeration -->
+<rule id="100120" level="6">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)cat|less|more</field>
+  <field name="auditd.file" type="pcre2">/etc/passwd</field>
+  <description>Local user account enumeration detected</description>
+  <mitre>
+    <id>T1087.001</id>
+  </mitre>
+  <group>discovery,</group>
+</rule>
+
+<!-- Network discovery commands -->
+<rule id="100121" level="8">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)nmap|masscan|zmap|arp-scan</field>
+  <description>Network scanning tool executed</description>
+  <mitre>
+    <id>T1046</id>
+  </mitre>
+  <group>discovery,network_activity,</group>
+</rule>
+
+<!-- AD enumeration tools -->
+<rule id="100122" level="10">
+  <if_sid>60009</if_sid>
+  <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)Get-ADUser|Get-ADGroup|Get-ADComputer|net\s+user\s+/domain|net\s+group\s+/domain</field>
+  <description>Active Directory enumeration detected</description>
+  <mitre>
+    <id>T1087.002</id>
+  </mitre>
+  <group>discovery,powershell,</group>
+</rule>
+
+<!-- System information gathering -->
+<rule id="100123" level="6">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)uname|hostname|whoami|id|cat.*release</field>
+  <description>System information gathering detected</description>
+  <mitre>
+    <id>T1082</id>
+  </mitre>
+  <group>discovery,</group>
+</rule>
+
+<!-- Cloud metadata service access (SSRF/credential theft) -->
+<rule id="100124" level="12">
+  <decoded_as>auditd</decoded_as>
+  <field name="auditd.exe" type="pcre2">(?i)curl|wget</field>
+  <field name="auditd.a0" type="pcre2">169\.254\.169\.254|metadata\.google|metadata\.azure</field>
+  <description>Cloud metadata service access detected (potential credential theft)</description>
+  <mitre>
+    <id>T1552.005</id>
+  </mitre>
+  <group>discovery,credential_access,cloud_security,</group>
+</rule>
+
 </group>
