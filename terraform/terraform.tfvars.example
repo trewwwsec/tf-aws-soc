@@ -1,0 +1,76 @@
+# =============================================================================
+# Cloud SOC Platform - Terraform Configuration
+# =============================================================================
+#
+# Copy this file to terraform.tfvars and update with your settings:
+#   cp terraform.tfvars.example terraform.tfvars
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# AWS Configuration
+# -----------------------------------------------------------------------------
+
+# AWS Region for deployment
+aws_region = "us-east-1"
+
+# Environment name (used in resource naming)
+environment = "lab"
+
+# Project name prefix for resources
+project_name = "cloud-soc"
+
+# -----------------------------------------------------------------------------
+# Network Configuration
+# -----------------------------------------------------------------------------
+
+# VPC CIDR block
+vpc_cidr = "10.0.0.0/16"
+
+# Subnet CIDR blocks
+public_subnet_cidr  = "10.0.1.0/24"
+private_subnet_cidr = "10.0.2.0/24"
+
+# -----------------------------------------------------------------------------
+# SSH Access Configuration (IMPORTANT!)
+# -----------------------------------------------------------------------------
+
+# Allowed IP addresses for SSH access
+# SECURITY: Replace with YOUR public IP only!
+# Find your IP: curl ifconfig.me
+allowed_ssh_cidr = ["YOUR.PUBLIC.IP.HERE/32"]
+
+# AWS Key Pair name (must exist in AWS)
+ssh_key_name = "cloud-soc-key"
+
+# Local path to SSH private key (for rule deployment provisioner)
+ssh_private_key_path = "~/.ssh/cloud-soc-key.pem"
+
+# -----------------------------------------------------------------------------
+# Instance Configuration
+# -----------------------------------------------------------------------------
+
+# Wazuh Server instance type
+# Note: t3.medium is the minimum for Wazuh (2 vCPU, 4GB RAM)
+# This is NOT free tier but is required for Wazuh to function
+wazuh_instance_type = "t3.medium"
+
+# Endpoint instance type
+# t3.micro IS free tier eligible
+endpoint_instance_type = "t3.micro"
+
+# =============================================================================
+# COST ESTIMATES (us-east-1 pricing)
+# =============================================================================
+#
+# Component               | Type       | $/hour  | $/day   | $/month
+# ----------------------- | ---------- | ------- | ------- | -------
+# Wazuh Server            | t3.medium  | $0.0416 | $1.00   | $30.00
+# Linux Endpoint          | t3.micro   | $0.0104 | $0.25   | $7.50
+# Windows Endpoint        | t3.micro   | $0.0104 | $0.25   | $7.50
+# ----------------------- | ---------- | ------- | ------- | -------
+# Total (approx)          |            | $0.06   | $1.50   | $45.00
+#
+# Note: EBS volumes, data transfer may add minor additional costs
+# REMEMBER: Run 'terraform destroy' when not using!
+# =============================================================================

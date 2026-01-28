@@ -180,11 +180,54 @@ terraform init
 # 4. Review the plan
 terraform plan
 
-# 5. Deploy infrastructure
+# 5. Deploy infrastructure (includes automatic rule deployment!)
 terraform apply
 
 # 6. Get Wazuh server IP
 terraform output wazuh_public_ip
+```
+
+### What Gets Deployed
+
+When you run `terraform apply`, the following happens automatically:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    AUTOMATED DEPLOYMENT FLOW                        │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  1. VPC & Networking                                                │
+│     └── Public/Private subnets, Security Groups, Internet Gateway  │
+│                                                                     │
+│  2. Wazuh Server (t3.medium)                                        │
+│     └── Wazuh Manager, Dashboard, Indexer (all-in-one)              │
+│                                                                     │
+│  3. Endpoints                                                       │
+│     ├── Linux endpoint (t3.micro) with Wazuh agent                  │
+│     └── Windows endpoint (t3.micro) with Wazuh agent                │
+│                                                                     │
+│  4. Detection Rules (AUTOMATIC!)                                    │
+│     ├── 45 Windows/Linux rules (local_rules.xml)                    │
+│     ├── 28 macOS rules (macos_rules.xml)                            │
+│     └── Wazuh manager auto-restart to load rules                    │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Required Configuration
+
+Create `terraform/terraform.tfvars`:
+
+```hcl
+# AWS Region
+aws_region = "us-east-1"
+
+# Your public IP for SSH access (IMPORTANT!)
+allowed_ssh_cidr = ["YOUR.PUBLIC.IP.0/32"]
+
+# SSH Key Configuration
+ssh_key_name         = "cloud-soc-key"          # AWS key pair name
+ssh_private_key_path = "~/.ssh/cloud-soc-key.pem"  # Local path to private key
 ```
 
 ### Access Wazuh Dashboard
@@ -194,20 +237,32 @@ terraform output wazuh_public_ip
 ssh -i ~/.ssh/your-key.pem ubuntu@<WAZUH_PUBLIC_IP>
 
 # Get default credentials
-sudo cat /var/ossec/etc/credentials.txt
+sudo tar -xvf wazuh-install-files.tar
+sudo cat wazuh-install-files/wazuh-passwords.txt
 
 # Access dashboard at https://<WAZUH_PUBLIC_IP>:443
 ```
 
-### Deploy Detection Rules
+### Update Detection Rules
+
+Detection rules are **automatically redeployed** when you modify them:
 
 ```bash
-# Copy custom rules to Wazuh server
-scp wazuh/custom_rules/local_rules.xml ubuntu@<WAZUH_IP>:/tmp/
+# 1. Edit rule files
+vim wazuh/custom_rules/local_rules.xml
+vim wazuh/custom_rules/macos_rules.xml
 
-# On Wazuh server
-sudo mv /tmp/local_rules.xml /var/ossec/etc/rules/
-sudo systemctl restart wazuh-manager
+# 2. Apply changes (only the rules provisioner runs)
+terraform apply
+
+# Terraform detects file changes via filemd5() and redeploys
+```
+
+To force a rule redeploy without changing files:
+
+```bash
+terraform taint null_resource.deploy_detection_rules
+terraform apply
 ```
 
 ### Run Attack Simulations
@@ -216,6 +271,9 @@ sudo systemctl restart wazuh-manager
 # On Linux endpoint
 cd attack-simulation
 ./run-all-linux.sh
+
+# On macOS (local or EC2)
+./macos-attacks.sh
 
 # On Windows endpoint
 .\powershell-attacks.ps1
