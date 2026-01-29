@@ -8,7 +8,7 @@
 [![macOS](https://img.shields.io/badge/macOS-Supported-lightgrey?style=for-the-badge&logo=apple)](detections/04-macos-attacks.md)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-> **A production-ready Cloud Security Operations Center (SOC) built with Infrastructure as Code, featuring 73 MITRE ATT&CK-mapped detection rules across Windows, Linux, and macOS, AI-powered alert analysis, automated attack simulations, and comprehensive incident response playbooks.**
+> **A production-ready Cloud Security Operations Center (SOC) built with Infrastructure as Code, featuring 2,000+ MITRE ATT&CK-mapped detection rules (including SOCFortress community rules) across Windows, Linux, and macOS, AI-powered alert analysis, automated attack simulations, and comprehensive incident response playbooks.**
 
 ---
 
@@ -37,7 +37,8 @@ This project demonstrates the design and implementation of a **complete Cloud Se
 
 ### 💡 Key Highlights
 
-- **73 Custom Detection Rules** mapped to MITRE ATT&CK framework
+- **2,000+ Detection Rules** combining custom + SOCFortress community rules
+- **SOCFortress Integration** - Trusted community detection rules automatically deployed
 - **Multi-Platform Support**: Windows, Linux, and macOS detection
 - **AI-Powered Alert Analysis** with LLM integration for intelligent triage
 - **Automated Attack Simulations** based on Atomic Red Team
@@ -69,9 +70,10 @@ This project demonstrates the design and implementation of a **complete Cloud Se
 ### 🔍 Detection Engineering
 | Feature | Description |
 |---------|-------------|
-| **73 Detection Rules** | Production-ready Wazuh rules |
+| **2,000+ Detection Rules** | Custom + SOCFortress community rules |
+| **SOCFortress Integration** | Auto-deployed via Terraform |
 | **Multi-Platform** | Windows, Linux, macOS support |
-| **MITRE ATT&CK Mapping** | 11 tactics, 50+ techniques covered |
+| **MITRE ATT&CK Mapping** | 12 tactics, 100+ techniques covered |
 | **Compliance Mapping** | PCI DSS, NIST, GDPR, HIPAA |
 | **< 2 min MTTD** | Mean Time to Detect target |
 

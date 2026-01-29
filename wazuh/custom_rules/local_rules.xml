@@ -19,7 +19,7 @@
      ======================================== -->
 
 <!-- Detect multiple failed SSH login attempts -->
-<rule id="100001" level="10" frequency="5" timeframe="120">
+<rule id="200001" level="10" frequency="5" timeframe="120">
   <if_matched_sid>5710</if_matched_sid>
   <description>SSH brute force attack detected (5+ failures in 2 minutes)</description>
   <mitre>
@@ -29,7 +29,7 @@
 </rule>
 
 <!-- Successful login after brute force attempts -->
-<rule id="100002" level="12">
+<rule id="200002" level="12">
   <if_sid>5715</if_sid>
   <if_fts></if_fts>
   <description>SSH brute force - successful login after multiple failures (CRITICAL)</description>
@@ -40,7 +40,7 @@
 </rule>
 
 <!-- SSH login from unusual location -->
-<rule id="100003" level="8">
+<rule id="200003" level="8">
   <if_sid>5715</if_sid>
   <time>2 am - 6 am</time>
   <description>SSH login during unusual hours (2 AM - 6 AM)</description>
@@ -56,7 +56,7 @@
      ======================================== -->
 
 <!-- Encoded PowerShell commands -->
-<rule id="100010" level="12">
+<rule id="200010" level="12">
   <if_sid>60009</if_sid>
   <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)-enc.*|encodedcommand|frombase64string</field>
   <description>Encoded PowerShell command detected (obfuscation)</description>
@@ -68,7 +68,7 @@
 </rule>
 
 <!-- PowerShell download cradle -->
-<rule id="100011" level="12">
+<rule id="200011" level="12">
   <if_sid>60009</if_sid>
   <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)iex.*downloadstring|invoke-webrequest.*iex|iwr.*iex|curl.*iex|wget.*iex</field>
   <description>PowerShell download cradle detected (remote code execution)</description>
@@ -80,7 +80,7 @@
 </rule>
 
 <!-- PowerShell execution policy bypass -->
-<rule id="100012" level="10">
+<rule id="200012" level="10">
   <if_sid>60009</if_sid>
   <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)-executionpolicy\s+(bypass|unrestricted)</field>
   <description>PowerShell execution policy bypass detected</description>
@@ -92,7 +92,7 @@
 </rule>
 
 <!-- Mimikatz detection -->
-<rule id="100013" level="15">
+<rule id="200013" level="15">
   <if_sid>60009</if_sid>
   <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)mimikatz|invoke-mimikatz|dumpcreds|sekurlsa|kerberos::golden</field>
   <description>Mimikatz credential dumping tool detected (CRITICAL)</description>
@@ -104,7 +104,7 @@
 </rule>
 
 <!-- PowerShell Invoke-Expression with suspicious patterns -->
-<rule id="100014" level="10">
+<rule id="200014" level="10">
   <if_sid>60009</if_sid>
   <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)invoke-expression|iex\s+\(</field>
   <description>PowerShell Invoke-Expression detected (potential code injection)</description>
@@ -120,7 +120,7 @@
      ======================================== -->
 
 <!-- Base sudo command (informational) -->
-<rule id="100020" level="3">
+<rule id="200020" level="3">
   <if_sid>5401</if_sid>
   <description>Sudo command executed</description>
   <mitre>
@@ -130,8 +130,8 @@
 </rule>
 
 <!-- Suspicious sudo commands -->
-<rule id="100021" level="10">
-  <if_sid>100020</if_sid>
+<rule id="200021" level="10">
+  <if_sid>200020</if_sid>
   <field name="command" type="pcre2">(?i)su\s+-|/bin/bash|/bin/sh|nc\s+|python|perl|ruby|php</field>
   <description>Suspicious sudo command executed (shell/scripting interpreter)</description>
   <mitre>
@@ -142,8 +142,8 @@
 </rule>
 
 <!-- Sudo to root shell -->
-<rule id="100022" level="12">
-  <if_sid>100020</if_sid>
+<rule id="200022" level="12">
+  <if_sid>200020</if_sid>
   <field name="command" type="pcre2">sudo\s+su\s*$|sudo\s+-i|sudo\s+bash</field>
   <description>Sudo escalation to root shell detected</description>
   <mitre>
@@ -158,7 +158,7 @@
      ======================================== -->
 
 <!-- New Linux user created -->
-<rule id="100030" level="10">
+<rule id="200030" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.key">identity</field>
   <field name="auditd.file">/etc/passwd</field>
@@ -170,7 +170,7 @@
 </rule>
 
 <!-- New Windows user created -->
-<rule id="100031" level="10">
+<rule id="200031" level="10">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">4720</field>
   <description>New Windows user account created</description>
@@ -181,7 +181,7 @@
 </rule>
 
 <!-- User added to privileged group (Linux) -->
-<rule id="100032" level="12">
+<rule id="200032" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.key">identity</field>
   <field name="auditd.file" type="pcre2">/etc/group|/etc/sudoers</field>
@@ -193,7 +193,7 @@
 </rule>
 
 <!-- User added to Administrators group (Windows) -->
-<rule id="100033" level="12">
+<rule id="200033" level="12">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">4732</field>
   <field name="win.eventdata.targetUserName" type="pcre2">(?i)administrators|domain admins</field>
@@ -210,7 +210,7 @@
      ======================================== -->
 
 <!-- Cron job created (Linux) -->
-<rule id="100060" level="10">
+<rule id="200060" level="10">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">/etc/cron|/var/spool/cron</field>
   <description>Cron job created or modified (persistence mechanism)</description>
@@ -221,7 +221,7 @@
 </rule>
 
 <!-- Systemd service created -->
-<rule id="100061" level="10">
+<rule id="200061" level="10">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">/etc/systemd/system|/lib/systemd/system</field>
   <description>Systemd service created or modified (persistence)</description>
@@ -232,7 +232,7 @@
 </rule>
 
 <!-- Windows scheduled task created -->
-<rule id="100062" level="10">
+<rule id="200062" level="10">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">4698</field>
   <description>Windows scheduled task created (persistence mechanism)</description>
@@ -243,7 +243,7 @@
 </rule>
 
 <!-- Windows service created -->
-<rule id="100063" level="10">
+<rule id="200063" level="10">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">7045</field>
   <description>New Windows service created (persistence mechanism)</description>
@@ -259,7 +259,7 @@
      ======================================== -->
 
 <!-- Shadow file accessed (Linux) -->
-<rule id="100070" level="15">
+<rule id="200070" level="15">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.file">/etc/shadow</field>
   <description>Shadow password file accessed (credential dumping attempt)</description>
@@ -270,7 +270,7 @@
 </rule>
 
 <!-- LSASS process accessed (Windows) -->
-<rule id="100071" level="15">
+<rule id="200071" level="15">
   <if_sid>61600</if_sid>
   <field name="win.system.eventID">10</field>
   <field name="win.eventdata.targetImage" type="pcre2">(?i)lsass\.exe</field>
@@ -282,7 +282,7 @@
 </rule>
 
 <!-- SAM/SECURITY registry hive access -->
-<rule id="100072" level="15">
+<rule id="200072" level="15">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">4663</field>
   <field name="win.eventdata.objectName" type="pcre2">(?i)\\SAM$|\\SECURITY$|\\config\\SAM|\\config\\SECURITY</field>
@@ -299,7 +299,7 @@
      ======================================== -->
 
 <!-- Critical system file modified (Linux) -->
-<rule id="100050" level="12">
+<rule id="200050" level="12">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">/etc/passwd|/etc/shadow|/etc/sudoers|/etc/ssh/sshd_config</field>
   <description>Critical system file modified</description>
@@ -310,7 +310,7 @@
 </rule>
 
 <!-- SSH authorized_keys modified -->
-<rule id="100051" level="12">
+<rule id="200051" level="12">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">authorized_keys</field>
   <description>SSH authorized_keys file modified (backdoor access)</description>
@@ -321,7 +321,7 @@
 </rule>
 
 <!-- Bash history deleted -->
-<rule id="100052" level="10">
+<rule id="200052" level="10">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">\.bash_history|\.zsh_history</field>
   <match>deleted</match>
@@ -333,7 +333,7 @@
 </rule>
 
 <!-- Windows Startup folder modification -->
-<rule id="100053" level="12">
+<rule id="200053" level="12">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)Startup|Start Menu\\Programs\\Startup</field>
   <description>Windows Startup folder modified (persistence)</description>
@@ -349,7 +349,7 @@
      ======================================== -->
 
 <!-- Suspicious network tool executed -->
-<rule id="100040" level="10">
+<rule id="200040" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.key">suspicious_network</field>
   <description>Suspicious network tool executed (nc/ncat/socat)</description>
@@ -360,7 +360,7 @@
 </rule>
 
 <!-- Reverse shell patterns -->
-<rule id="100041" level="15">
+<rule id="200041" level="15">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)nc|ncat|socat|netcat</field>
   <field name="auditd.a0" type="pcre2">-e|--exec|-c</field>
@@ -378,7 +378,7 @@
      ======================================== -->
 
 <!-- Firewall disabled (Linux) -->
-<rule id="100080" level="12">
+<rule id="200080" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)ufw|iptables|firewalld</field>
   <field name="auditd.a0" type="pcre2">(?i)disable|stop|flush</field>
@@ -390,7 +390,7 @@
 </rule>
 
 <!-- Windows Defender disabled -->
-<rule id="100081" level="12">
+<rule id="200081" level="12">
   <if_sid>60009</if_sid>
   <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)Set-MpPreference.*DisableRealtimeMonitoring.*True</field>
   <description>Windows Defender real-time protection disabled</description>
@@ -401,7 +401,7 @@
 </rule>
 
 <!-- Audit logging disabled -->
-<rule id="100082" level="15">
+<rule id="200082" level="15">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">1102</field>
   <description>Windows audit log cleared (CRITICAL - anti-forensics)</description>
@@ -417,7 +417,7 @@
      ======================================== -->
 
 <!-- RDP connection initiated (Windows) -->
-<rule id="100090" level="6">
+<rule id="200090" level="6">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">4624</field>
   <field name="win.eventdata.logonType">10</field>
@@ -429,8 +429,8 @@
 </rule>
 
 <!-- RDP login from unusual source -->
-<rule id="100091" level="10">
-  <if_sid>100090</if_sid>
+<rule id="200091" level="10">
+  <if_sid>200090</if_sid>
   <srcip>!192.168.|!10.|!172.16.</srcip>
   <description>RDP login from external/unusual IP address</description>
   <mitre>
@@ -441,7 +441,7 @@
 </rule>
 
 <!-- PSExec execution detected -->
-<rule id="100092" level="12">
+<rule id="200092" level="12">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">7045</field>
   <field name="win.eventdata.serviceName" type="pcre2">(?i)psexe|paexe</field>
@@ -454,7 +454,7 @@
 </rule>
 
 <!-- SMB connection to admin shares -->
-<rule id="100093" level="10">
+<rule id="200093" level="10">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">5140</field>
   <field name="win.eventdata.shareName" type="pcre2">(?i)ADMIN\$|C\$|IPC\$</field>
@@ -466,7 +466,7 @@
 </rule>
 
 <!-- SSH to multiple hosts (potential lateral movement) -->
-<rule id="100094" level="8" frequency="5" timeframe="600">
+<rule id="200094" level="8" frequency="5" timeframe="600">
   <if_matched_sid>5715</if_matched_sid>
   <same_source_ip />
   <description>SSH connections to multiple hosts from single source (lateral movement)</description>
@@ -477,7 +477,7 @@
 </rule>
 
 <!-- WinRM remote session -->
-<rule id="100095" level="10">
+<rule id="200095" level="10">
   <if_sid>60000</if_sid>
   <field name="win.system.eventID">4624</field>
   <field name="win.eventdata.logonType">3</field>
@@ -495,7 +495,7 @@
      ======================================== -->
 
 <!-- Large data transfer via web upload -->
-<rule id="100100" level="10">
+<rule id="200100" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)curl|wget|python</field>
   <field name="auditd.a0" type="pcre2">(?i)--upload|--data|-d|POST</field>
@@ -508,7 +508,7 @@
 </rule>
 
 <!-- Base64 encoded data in commands -->
-<rule id="100101" level="10">
+<rule id="200101" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.a0" type="pcre2">base64|openssl\s+enc</field>
   <description>Data encoding detected (potential exfiltration preparation)</description>
@@ -520,7 +520,7 @@
 </rule>
 
 <!-- DNS exfiltration patterns -->
-<rule id="100102" level="12">
+<rule id="200102" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)nslookup|dig|host</field>
   <field name="auditd.a0" type="pcre2">TXT|CNAME|MX|\.{50,}</field>
@@ -532,7 +532,7 @@
 </rule>
 
 <!-- Cloud storage access -->
-<rule id="100103" level="8">
+<rule id="200103" level="8">
   <if_sid>60009</if_sid>
   <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)s3\.|blob\.core|storage\.googleapis|dropbox|onedrive</field>
   <description>Cloud storage service access detected in PowerShell</description>
@@ -543,7 +543,7 @@
 </rule>
 
 <!-- Archive creation (tar/zip) of sensitive directories -->
-<rule id="100104" level="10">
+<rule id="200104" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)tar|zip|7z|gzip</field>
   <field name="auditd.a0" type="pcre2">(?i)/etc|/home|/root|/var/log</field>
@@ -560,7 +560,7 @@
      ======================================== -->
 
 <!-- Sensitive file access patterns -->
-<rule id="100110" level="10">
+<rule id="200110" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.file" type="pcre2">(?i)\.pem$|\.key$|\.pfx$|\.p12$|id_rsa</field>
   <description>Access to cryptographic key file detected</description>
@@ -571,7 +571,7 @@
 </rule>
 
 <!-- Browser credential file access -->
-<rule id="100111" level="12">
+<rule id="200111" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.file" type="pcre2">(?i)Login Data|Cookies|\.sqlite|signons\.sqlite</field>
   <description>Browser credential/cookie file accessed</description>
@@ -583,7 +583,7 @@
 </rule>
 
 <!-- Database dump commands -->
-<rule id="100112" level="12">
+<rule id="200112" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)mysqldump|pg_dump|mongodump|sqlite3</field>
   <description>Database dump command executed</description>
@@ -599,7 +599,7 @@
      ======================================== -->
 
 <!-- Local account enumeration -->
-<rule id="100120" level="6">
+<rule id="200120" level="6">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)cat|less|more</field>
   <field name="auditd.file" type="pcre2">/etc/passwd</field>
@@ -611,7 +611,7 @@
 </rule>
 
 <!-- Network discovery commands -->
-<rule id="100121" level="8">
+<rule id="200121" level="8">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)nmap|masscan|zmap|arp-scan</field>
   <description>Network scanning tool executed</description>
@@ -622,7 +622,7 @@
 </rule>
 
 <!-- AD enumeration tools -->
-<rule id="100122" level="10">
+<rule id="200122" level="10">
   <if_sid>60009</if_sid>
   <field name="win.eventdata.scriptBlockText" type="pcre2">(?i)Get-ADUser|Get-ADGroup|Get-ADComputer|net\s+user\s+/domain|net\s+group\s+/domain</field>
   <description>Active Directory enumeration detected</description>
@@ -633,7 +633,7 @@
 </rule>
 
 <!-- System information gathering -->
-<rule id="100123" level="6">
+<rule id="200123" level="6">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)uname|hostname|whoami|id|cat.*release</field>
   <description>System information gathering detected</description>
@@ -644,7 +644,7 @@
 </rule>
 
 <!-- Cloud metadata service access (SSRF/credential theft) -->
-<rule id="100124" level="12">
+<rule id="200124" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)curl|wget</field>
   <field name="auditd.a0" type="pcre2">169\.254\.169\.254|metadata\.google|metadata\.azure</field>

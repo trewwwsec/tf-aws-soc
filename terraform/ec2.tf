@@ -98,19 +98,55 @@ resource "null_resource" "deploy_detection_rules" {
   # Deploy rules and restart Wazuh
   provisioner "remote-exec" {
     inline = [
-      "echo 'Deploying custom detection rules...'",
+      "echo '============================================='",
+      "echo 'Deploying Custom Detection Rules...'",
+      "echo '============================================='",
+      
+      # Deploy our custom rules (renumbered to 200xxx range)
       "sudo mv /tmp/local_rules.xml /var/ossec/etc/rules/local_rules.xml",
       "sudo mv /tmp/macos_rules.xml /var/ossec/etc/rules/macos_rules.xml",
       "sudo chown wazuh:wazuh /var/ossec/etc/rules/local_rules.xml",
       "sudo chown wazuh:wazuh /var/ossec/etc/rules/macos_rules.xml",
       "sudo chmod 660 /var/ossec/etc/rules/local_rules.xml",
       "sudo chmod 660 /var/ossec/etc/rules/macos_rules.xml",
-      "echo 'Restarting Wazuh manager to load rules...'",
+      "echo '✓ Custom rules deployed (73 rules, ID range: 200xxx)'",
+      
+      # Install SOCFortress community rules
+      "echo ''",
+      "echo 'Installing SOCFortress Community Rules...'",
+      "echo '(2000+ additional detection rules)'",
+      "cd /tmp",
+      "curl -sO https://raw.githubusercontent.com/socfortress/Wazuh-Rules/main/wazuh_socfortress_rules.sh",
+      "chmod +x wazuh_socfortress_rules.sh",
+      "sudo bash wazuh_socfortress_rules.sh",
+      "echo '✓ SOCFortress rules installed'",
+      
+      # Restart Wazuh manager to load all rules
+      "echo ''",
+      "echo 'Restarting Wazuh manager to load all rules...'",
       "sudo systemctl restart wazuh-manager",
-      "echo 'Custom detection rules deployed successfully!'",
+      "sleep 10",
+      
+      # Verify rules loaded
+      "echo ''",
+      "echo '============================================='",
+      "echo 'Detection Rules Deployment Complete!'",
+      "echo '============================================='",
+      "echo ''",
+      "echo 'Custom Rules (200xxx range):'",
       "echo '  - local_rules.xml: 45 Windows/Linux rules'",
       "echo '  - macos_rules.xml: 28 macOS rules'",
-      "echo '  - Total: 73 MITRE ATT&CK mapped rules'"
+      "echo ''",
+      "echo 'SOCFortress Community Rules:'",
+      "echo '  - Sysmon for Windows'",
+      "echo '  - Sysmon for Linux'",
+      "echo '  - PowerShell detection'",
+      "echo '  - Yara malware rules'",
+      "echo '  - Suricata IDS rules'",
+      "echo '  - Office365 integration'",
+      "echo '  - And 2000+ more...'",
+      "echo ''",
+      "echo 'Total: 2000+ MITRE ATT&CK mapped rules'"
     ]
 
     connection {

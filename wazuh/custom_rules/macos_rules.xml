@@ -22,7 +22,7 @@
      ======================================== -->
 
 <!-- Launch Agent created (user-level persistence) -->
-<rule id="100200" level="10">
+<rule id="200200" level="10">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)Library/LaunchAgents/.*\.plist</field>
   <description>macOS Launch Agent created (user-level persistence)</description>
@@ -33,7 +33,7 @@
 </rule>
 
 <!-- Launch Daemon created (system-level persistence) -->
-<rule id="100201" level="12">
+<rule id="200201" level="12">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)/Library/LaunchDaemons/.*\.plist|/System/Library/LaunchDaemons</field>
   <description>macOS Launch Daemon created (system-level persistence - CRITICAL)</description>
@@ -44,7 +44,7 @@
 </rule>
 
 <!-- Login Items modified -->
-<rule id="100202" level="10">
+<rule id="200202" level="10">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)com\.apple\.loginitems\.plist|loginwindow\.plist</field>
   <description>macOS Login Items modified (startup persistence)</description>
@@ -55,7 +55,7 @@
 </rule>
 
 <!-- Cron job created on macOS -->
-<rule id="100203" level="10">
+<rule id="200203" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.file" type="pcre2">/var/at/tabs|/usr/lib/cron/tabs</field>
   <description>macOS cron job created or modified</description>
@@ -66,7 +66,7 @@
 </rule>
 
 <!-- Periodic scripts modified -->
-<rule id="100204" level="10">
+<rule id="200204" level="10">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">/etc/periodic/(daily|weekly|monthly)</field>
   <description>macOS periodic script modified (scheduled persistence)</description>
@@ -83,7 +83,7 @@
      ======================================== -->
 
 <!-- osascript execution (AppleScript) -->
-<rule id="100210" level="8">
+<rule id="200210" level="8">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)/usr/bin/osascript</field>
   <description>macOS osascript (AppleScript) executed</description>
@@ -94,8 +94,8 @@
 </rule>
 
 <!-- osascript with JavaScript -->
-<rule id="100211" level="10">
-  <if_sid>100210</if_sid>
+<rule id="200211" level="10">
+  <if_sid>200210</if_sid>
   <field name="auditd.a0" type="pcre2">(?i)-l\s*JavaScript|JXA</field>
   <description>macOS osascript with JavaScript execution (JXA)</description>
   <mitre>
@@ -105,8 +105,8 @@
 </rule>
 
 <!-- osascript executing shell commands -->
-<rule id="100212" level="12">
-  <if_sid>100210</if_sid>
+<rule id="200212" level="12">
+  <if_sid>200210</if_sid>
   <field name="auditd.a0" type="pcre2">(?i)do shell script|bash|sh -c</field>
   <description>macOS osascript executing shell commands (suspicious)</description>
   <mitre>
@@ -117,7 +117,7 @@
 </rule>
 
 <!-- Suspicious curl/wget with execution -->
-<rule id="100213" level="12">
+<rule id="200213" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)curl|wget</field>
   <field name="auditd.a0" type="pcre2">(?i)\|\s*(bash|sh|python|perl|ruby)|>\s*/tmp/</field>
@@ -136,7 +136,7 @@
      ======================================== -->
 
 <!-- Keychain access by non-standard process -->
-<rule id="100220" level="12">
+<rule id="200220" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)security</field>
   <field name="auditd.a0" type="pcre2">(?i)dump-keychain|find-generic-password|export</field>
@@ -148,7 +148,7 @@
 </rule>
 
 <!-- Keychain file access -->
-<rule id="100221" level="10">
+<rule id="200221" level="10">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)\.keychain-db$|login\.keychain</field>
   <description>macOS Keychain database accessed</description>
@@ -159,7 +159,7 @@
 </rule>
 
 <!-- Safari credentials accessed -->
-<rule id="100222" level="12">
+<rule id="200222" level="12">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)Safari/Passwords\.plist|Safari/LocalStorage</field>
   <description>macOS Safari credential files accessed</description>
@@ -170,7 +170,7 @@
 </rule>
 
 <!-- Chrome credentials accessed -->
-<rule id="100223" level="12">
+<rule id="200223" level="12">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)Chrome/Default/Login Data|Chrome/Default/Cookies</field>
   <description>macOS Chrome credential/cookie files accessed</description>
@@ -182,7 +182,7 @@
 </rule>
 
 <!-- SSH private key access -->
-<rule id="100224" level="10">
+<rule id="200224" level="10">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)\.ssh/id_rsa$|\.ssh/id_ed25519$|\.ssh/id_ecdsa$</field>
   <description>macOS SSH private key accessed</description>
@@ -199,7 +199,7 @@
      ======================================== -->
 
 <!-- Gatekeeper bypass attempt -->
-<rule id="100230" level="12">
+<rule id="200230" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)spctl|xattr</field>
   <field name="auditd.a0" type="pcre2">(?i)--master-disable|--disable|com\.apple\.quarantine</field>
@@ -211,7 +211,7 @@
 </rule>
 
 <!-- SIP status check (potential bypass recon) -->
-<rule id="100231" level="6">
+<rule id="200231" level="6">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)csrutil</field>
   <description>macOS SIP (System Integrity Protection) status checked</description>
@@ -222,7 +222,7 @@
 </rule>
 
 <!-- TCC database access (privacy bypass) -->
-<rule id="100232" level="15">
+<rule id="200232" level="15">
   <if_sid>550</if_sid>
   <field name="file" type="pcre2">(?i)TCC\.db</field>
   <description>macOS TCC database accessed (CRITICAL - privacy bypass)</description>
@@ -233,7 +233,7 @@
 </rule>
 
 <!-- XProtect/MRT disabled -->
-<rule id="100233" level="12">
+<rule id="200233" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)defaults</field>
   <field name="auditd.a0" type="pcre2">(?i)XProtect|MRT</field>
@@ -245,7 +245,7 @@
 </rule>
 
 <!-- Firewall disabled -->
-<rule id="100234" level="12">
+<rule id="200234" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)/usr/libexec/ApplicationFirewall/socketfilterfw</field>
   <field name="auditd.a0" type="pcre2">(?i)--setglobalstate\s+off</field>
@@ -263,7 +263,7 @@
      ======================================== -->
 
 <!-- System profiler executed -->
-<rule id="100240" level="6">
+<rule id="200240" level="6">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)system_profiler</field>
   <description>macOS system_profiler executed (system enumeration)</description>
@@ -274,7 +274,7 @@
 </rule>
 
 <!-- Network configuration discovery -->
-<rule id="100241" level="6">
+<rule id="200241" level="6">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)networksetup|ipconfig|ifconfig</field>
   <description>macOS network configuration discovery</description>
@@ -285,7 +285,7 @@
 </rule>
 
 <!-- Directory Services enumeration -->
-<rule id="100242" level="8">
+<rule id="200242" level="8">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)dscl|dscacheutil|ldapsearch</field>
   <description>macOS Directory Services enumeration detected</description>
@@ -296,7 +296,7 @@
 </rule>
 
 <!-- Installed applications enumeration -->
-<rule id="100243" level="6">
+<rule id="200243" level="6">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)mdfind|lsappinfo|pkgutil</field>
   <field name="auditd.a0" type="pcre2">(?i)kMDItemKind|list|--pkgs</field>
@@ -314,7 +314,7 @@
      ======================================== -->
 
 <!-- Screen capture utility -->
-<rule id="100250" level="8">
+<rule id="200250" level="8">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)screencapture</field>
   <description>macOS screen capture utility executed</description>
@@ -325,7 +325,7 @@
 </rule>
 
 <!-- Clipboard access -->
-<rule id="100251" level="8">
+<rule id="200251" level="8">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)pbcopy|pbpaste</field>
   <description>macOS clipboard access detected</description>
@@ -336,7 +336,7 @@
 </rule>
 
 <!-- Find command for sensitive files -->
-<rule id="100252" level="10">
+<rule id="200252" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)/usr/bin/find</field>
   <field name="auditd.a0" type="pcre2">(?i)\.pem|\.key|\.p12|password|credential|secret</field>
@@ -355,7 +355,7 @@
      ======================================== -->
 
 <!-- SSH tunnel created -->
-<rule id="100260" level="10">
+<rule id="200260" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)/usr/bin/ssh</field>
   <field name="auditd.a0" type="pcre2">(?i)-D\s+\d+|-L\s+\d+|-R\s+\d+</field>
@@ -367,7 +367,7 @@
 </rule>
 
 <!-- Netcat/socat execution -->
-<rule id="100261" level="12">
+<rule id="200261" level="12">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)nc|ncat|netcat|socat</field>
   <description>macOS network tool (nc/socat) executed</description>
@@ -378,7 +378,7 @@
 </rule>
 
 <!-- Reverse shell pattern -->
-<rule id="100262" level="15">
+<rule id="200262" level="15">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)bash|sh|zsh</field>
   <field name="auditd.a0" type="pcre2">(?i)-i\s+>\&\s*/dev/tcp|/dev/udp</field>
@@ -396,7 +396,7 @@
      ======================================== -->
 
 <!-- SSH to multiple hosts -->
-<rule id="100270" level="8" frequency="5" timeframe="600">
+<rule id="200270" level="8" frequency="5" timeframe="600">
   <if_matched_sid>5715</if_matched_sid>
   <same_source_ip />
   <description>macOS SSH connections to multiple hosts (lateral movement)</description>
@@ -407,7 +407,7 @@
 </rule>
 
 <!-- VNC/Screen Sharing initiated -->
-<rule id="100271" level="8">
+<rule id="200271" level="8">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)screensharingd|open.*vnc://</field>
   <description>macOS Screen Sharing/VNC connection initiated</description>
@@ -418,7 +418,7 @@
 </rule>
 
 <!-- Apple Remote Desktop -->
-<rule id="100272" level="10">
+<rule id="200272" level="10">
   <decoded_as>auditd</decoded_as>
   <field name="auditd.exe" type="pcre2">(?i)ARDAgent|Remote Desktop</field>
   <description>macOS Apple Remote Desktop activity detected</description>

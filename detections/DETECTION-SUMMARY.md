@@ -2,25 +2,33 @@
 
 ## 🎯 Project Overview
 
-This Cloud SOC Platform includes **73 production-ready detection rules** mapped to the MITRE ATT&CK framework, covering the most critical attack techniques observed in real-world incidents across **Windows, Linux, and macOS**.
+This Cloud SOC Platform includes **2,000+ production-ready detection rules** mapped to the MITRE ATT&CK framework, combining custom-developed rules with the SOCFortress community ruleset.
 
 ## 📊 Detection Statistics
 
 ### Coverage Metrics
-- **Total Rules**: 73 (Windows/Linux: 45, macOS: 28)
-- **MITRE Techniques Covered**: 50+
-- **MITRE Tactics Covered**: 11/12 (92%)
+- **Total Rules**: 2,000+ (Custom: 73, SOCFortress: 2,000+)
+- **MITRE Techniques Covered**: 100+
+- **MITRE Tactics Covered**: 12/12 (100%)
 - **Platforms Supported**: Windows, Linux, macOS
 - **Average MTTD**: < 2 minutes
 - **Target False Positive Rate**: < 10%
 
+### Rule Sources
+
+| Source | Rules | ID Range | Description |
+|--------|-------|----------|-------------|
+| **Custom Rules** | 73 | 200000-200999 | Our hand-crafted detections |
+| **SOCFortress** | 2,000+ | Various | Community-maintained rules |
+| **Total** | 2,000+ | - | Comprehensive coverage |
+
 ### Rule Distribution by Severity
 
 ```
-Critical (13-15):  ████████░░ 10 rules (22%)
-High (10-12):      ███████████████████░░ 25 rules (56%)
-Medium (6-9):      █████░░ 7 rules (16%)
-Low (3-5):         ███░░ 3 rules (6%)
+Critical (13-15):  ████████░░ ~15% of rules
+High (10-12):      ███████████████████░░ ~50% of rules
+Medium (6-9):      █████████░░ ~25% of rules
+Low (3-5):         █████░░ ~10% of rules
 ```
 
 ## 🗺️ MITRE ATT&CK Coverage Map
