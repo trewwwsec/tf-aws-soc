@@ -8,50 +8,23 @@
 
 set -e
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
-
-# Get script directory
+# Source common library
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 
-echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║                                                          ║${NC}"
-echo -e "${CYAN}║        Cloud SOC - Attack Simulation Suite              ║${NC}"
-echo -e "${CYAN}║        Linux Platform - All Simulations                 ║${NC}"
-echo -e "${CYAN}║                                                          ║${NC}"
-echo -e "${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
-echo ""
+# Print header
+print_header "Cloud SOC - Attack Simulation Suite"
 
 # Safety check
-echo -e "${RED}⚠️  CRITICAL WARNING ⚠️${NC}"
-echo -e "${RED}═══════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}This script will run ALL attack simulations!${NC}"
-echo -e "${YELLOW}Only run in isolated lab environments.${NC}"
-echo -e "${YELLOW}This will generate multiple security alerts.${NC}"
-echo ""
-echo "Simulations to be executed:"
-echo "  1. SSH Brute Force (T1110)"
-echo "  2. Privilege Escalation (T1548.003)"
-echo ""
-read -p "Are you ABSOLUTELY sure you want to continue? (type 'yes' to confirm): " confirm
-
-if [ "$confirm" != "yes" ]; then
-    echo -e "${YELLOW}Simulation cancelled.${NC}"
-    exit 0
-fi
+safety_check "ALL attack simulations (multiple security alerts)"
 
 # Create results directory
 RESULTS_DIR="$SCRIPT_DIR/results/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$RESULTS_DIR"
 
 echo ""
-echo -e "${GREEN}[+] Starting attack simulation suite...${NC}"
-echo -e "${GREEN}[+] Results will be saved to: $RESULTS_DIR${NC}"
+log_info "Starting attack simulation suite..."
+log_info "Results will be saved to: $RESULTS_DIR"
 echo ""
 
 # Function to run simulation
@@ -101,7 +74,7 @@ run_simulation "privilege-escalation.sh" "Privilege Escalation (T1548.003)"
 if [ -n "$SSH_TARGET_HOST" ]; then
     run_simulation "ssh-brute-force.sh" "SSH Brute Force (T1110)"
 else
-    echo -e "${YELLOW}⚠ SSH_TARGET_HOST not set, skipping SSH brute force${NC}"
+    log_warn "SSH_TARGET_HOST not set, skipping SSH brute force"
     echo "To enable: export SSH_TARGET_HOST='target.example.com'"
     echo "SKIP" > "$RESULTS_DIR/ssh-brute-force.status"
 fi
@@ -222,9 +195,7 @@ EOF
 
 # Display summary
 echo ""
-echo -e "${CYAN}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${CYAN}║                  SIMULATION COMPLETE                     ║${NC}"
-echo -e "${CYAN}╚══════════════════════════════════════════════════════════╝${NC}"
+print_header "SIMULATION COMPLETE"
 echo ""
 cat "$REPORT_FILE"
 echo ""
@@ -242,7 +213,7 @@ if [ "$check_alerts" = "yes" ]; then
     
     if [ -n "$WAZUH_SERVER" ]; then
         echo ""
-        echo -e "${GREEN}Connecting to Wazuh server...${NC}"
+        log_info "Connecting to Wazuh server..."
         echo ""
         
         ssh "$WAZUH_SERVER" << 'ENDSSH'
@@ -260,10 +231,6 @@ ENDSSH
 fi
 
 echo ""
-echo -e "${GREEN}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║                                                          ║${NC}"
-echo -e "${GREEN}║  Attack Simulation Suite Complete!                      ║${NC}"
-echo -e "${GREEN}║  Results saved to: $RESULTS_DIR${NC}"
-echo -e "${GREEN}║                                                          ║${NC}"
-echo -e "${GREEN}╚══════════════════════════════════════════════════════════╝${NC}"
+log_info "Attack Simulation Suite Complete!"
+log_info "Results saved to: $RESULTS_DIR"
 echo ""
