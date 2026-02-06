@@ -28,6 +28,7 @@ class WazuhClient:
         port: int = 55000,
         user: str = None,
         password: str = None,
+        verify_ssl: bool = None,
     ):
         """
         Initialize the Wazuh API client.
@@ -37,11 +38,17 @@ class WazuhClient:
             port: Wazuh API port (default: 55000)
             user: API user (default: from WAZUH_USER env var)
             password: API password (default: from WAZUH_PASSWORD env var)
+            verify_ssl: Verify SSL certificates (default: True, or from WAZUH_VERIFY_SSL env var)
         """
         self.host = host or os.environ.get("WAZUH_HOST", "localhost")
         self.port = port
         self.user = user or os.environ.get("WAZUH_USER", "wazuh")
         self.password = password or os.environ.get("WAZUH_PASSWORD", "")
+        self.verify_ssl = (
+            verify_ssl
+            if verify_ssl is not None
+            else os.environ.get("WAZUH_VERIFY_SSL", "true").lower() == "true"
+        )
         self.base_url = f"https://{self.host}:{self.port}"
         self.token = None
         self.token_expires = None
@@ -65,7 +72,7 @@ class WazuhClient:
             response = requests.post(
                 f"{self.base_url}/security/user/authenticate",
                 auth=HTTPBasicAuth(self.user, self.password),
-                verify=False,  # In production, use proper SSL verification
+                verify=self.verify_ssl,
             )
 
             if response.status_code == 200:
@@ -115,7 +122,7 @@ class WazuhClient:
                 headers=headers,
                 params=params,
                 json=data,
-                verify=False,
+                verify=self.verify_ssl,
             )
 
             return response.json()
