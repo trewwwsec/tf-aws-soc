@@ -119,7 +119,7 @@ log_action "Simulating sudo shell escalation"
 
 # Simulate sudo -i (interactive root shell)
 echo "Simulating: sudo -i"
-sudo -i -c "echo 'Interactive root shell simulation'"
+sudo bash -c "echo 'Interactive root shell simulation'"
 
 echo -e "${GREEN}✓ Sudo shell escalation simulated${NC}"
 echo "This should trigger Rule 100022 (severity: high)"
