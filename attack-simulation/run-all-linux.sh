@@ -67,13 +67,17 @@ run_simulation() {
     
     if [ -f "$SCRIPT_DIR/$script_name" ]; then
         # Run with automatic yes confirmation
+        # Disable exit on error temporarily to capture exit code
+        set +e
         echo "yes" | bash "$SCRIPT_DIR/$script_name" 2>&1 | tee "$log_file"
+        exit_code=${PIPESTATUS[1]}
+        set -e
         
-        if [ ${PIPESTATUS[1]} -eq 0 ]; then
+        if [ $exit_code -eq 0 ]; then
             echo -e "${GREEN}✓ $description completed successfully${NC}"
             echo "PASS" > "$RESULTS_DIR/${script_name%.sh}.status"
         else
-            echo -e "${RED}✗ $description failed${NC}"
+            echo -e "${RED}✗ $description failed (exit code: $exit_code)${NC}"
             echo "FAIL" > "$RESULTS_DIR/${script_name%.sh}.status"
         fi
     else
