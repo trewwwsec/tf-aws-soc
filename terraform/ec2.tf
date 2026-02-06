@@ -40,7 +40,7 @@ resource "aws_instance" "wazuh_server" {
   key_name               = var.ssh_key_name
 
   root_block_device {
-    volume_size           = 30
+    volume_size           = var.wazuh_volume_size
     volume_type           = "gp3"
     delete_on_termination = true
     encrypted             = true
@@ -66,7 +66,7 @@ resource "null_resource" "deploy_detection_rules" {
 
   # Wait for Wazuh to be ready
   provisioner "local-exec" {
-    command = "echo 'Waiting for Wazuh server to initialize...' && sleep 120"
+    command = "echo 'Waiting for Wazuh server to initialize...' && sleep ${var.wazuh_init_wait_seconds}"
   }
 
   # Copy local_rules.xml
@@ -168,7 +168,7 @@ resource "aws_instance" "linux_endpoint" {
   key_name               = var.ssh_key_name
 
   root_block_device {
-    volume_size           = 10
+    volume_size           = var.endpoint_volume_size
     volume_type           = "gp3"
     delete_on_termination = true
     encrypted             = true
@@ -196,7 +196,7 @@ resource "aws_instance" "windows_endpoint" {
   key_name               = var.ssh_key_name
 
   root_block_device {
-    volume_size           = 30
+    volume_size           = var.endpoint_volume_size
     volume_type           = "gp3"
     delete_on_termination = true
     encrypted             = true
