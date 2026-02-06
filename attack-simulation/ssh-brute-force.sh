@@ -9,12 +9,9 @@
 
 set -e
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
+# Source common library
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/common.sh"
 
 # Configuration
 TARGET_HOST="${SSH_TARGET_HOST:-localhost}"
@@ -22,43 +19,27 @@ TARGET_USER="${SSH_TARGET_USER:-testuser}"
 ATTEMPTS=6
 DELAY=2
 
-echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║                                                          ║${NC}"
-echo -e "${BLUE}║        SSH Brute Force Attack Simulation                ║${NC}"
-echo -e "${BLUE}║        MITRE ATT&CK: T1110 - Brute Force                ║${NC}"
-echo -e "${BLUE}║                                                          ║${NC}"
-echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
+# Print header
+print_header "SSH Brute Force Attack Simulation"
+echo -e "${BLUE}MITRE ATT&CK: T1110 - Brute Force${NC}"
 echo ""
 
 # Safety check
-echo -e "${RED}⚠️  WARNING: This script simulates a brute force attack!${NC}"
-echo -e "${YELLOW}Only run in isolated lab environments.${NC}"
-echo ""
 echo "Target: $TARGET_USER@$TARGET_HOST"
 echo "Attempts: $ATTEMPTS"
 echo ""
-read -p "Are you sure you want to continue? (yes/no): " confirm
-
-if [ "$confirm" != "yes" ]; then
-    echo -e "${YELLOW}Simulation cancelled.${NC}"
-    exit 0
-fi
+safety_check "a brute force attack"
 
 echo ""
-echo -e "${GREEN}[+] Starting SSH brute force simulation...${NC}"
+log_info "Starting SSH brute force simulation..."
 echo ""
-
-# Function to log actions
-log_action() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a simulation.log
-}
 
 # Test 1: Multiple Failed Login Attempts (Rule 100001)
 echo -e "${BLUE}[TEST 1]${NC} Simulating multiple failed SSH login attempts"
 echo "Expected Detection: Rule 100001 (SSH brute force - 5+ failures)"
 echo "----------------------------------------"
 
-log_action "Starting SSH brute force simulation against $TARGET_HOST"
+log_info "Starting SSH brute force simulation against $TARGET_HOST"
 
 # Create a temporary password list
 TEMP_PASS_FILE=$(mktemp)
@@ -84,7 +65,7 @@ if command -v sshpass &> /dev/null; then
             "$TARGET_USER@$TARGET_HOST" "echo test" 2>&1 | grep -q "Permission denied" && \
             echo "  ✗ Failed (expected)" || echo "  ✗ Failed"
         
-        log_action "Failed SSH attempt $attempt with password: $password"
+        log_info "Failed SSH attempt $attempt with password: $password"
         attempt=$((attempt + 1))
         sleep $DELAY
     done < "$TEMP_PASS_FILE"
@@ -132,7 +113,7 @@ if [ -n "$SSH_VALID_PASSWORD" ] || [ -n "$SSH_KEY_PATH" ]; then
             echo -e "${RED}✗ Login failed${NC}"
     fi
     
-    log_action "Successful SSH login after failed attempts"
+    log_info "Successful SSH login after failed attempts"
 else
     echo -e "${YELLOW}⚠ Skipping Test 2: No valid credentials provided${NC}"
     echo "To test Rule 100002, set one of:"
@@ -164,9 +145,21 @@ echo -e "${GREEN}[✓] Test 3 Complete${NC}"
 echo ""
 
 # Summary
-echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║                  SIMULATION SUMMARY                      ║${NC}"
-echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
+print_header "SIMULATION SUMMARY"
+echo "Simulation Type: SSH Brute Force"
+echo "MITRE ATT&CK: T1110 - Brute Force"
+echo "Target: $TARGET_USER@$TARGET_HOST"
+echo "Failed Attempts: $ATTEMPTS"
+echo ""
+echo "Expected Wazuh Alerts:"
+echo "  • Rule 100001: SSH brute force (5+ failures in 2 minutes)"
+echo "  • Rule 100002: Successful login after failures (if credentials provided)"
+echo "  • Rule 100003: Off-hours login (if during 2 AM - 6 AM)"
+echo ""
+print_section "📋" "Verification Steps"
+echo "1. Check Wazuh dashboard for alerts"
+echo "2. Or run on Wazuh server:"
+echo "   sudo tail -n 100 /var/ossec/logs/alerts/alerts.log | grep '100001\|100002\|100003'"
 echo ""
 echo "Simulation Type: SSH Brute Force"
 echo "MITRE ATT&CK: T1110 - Brute Force"
@@ -187,29 +180,13 @@ echo "Log file: simulation.log"
 echo ""
 
 # Verification helper
-echo -e "${YELLOW}Would you like to check for alerts now? (requires SSH to Wazuh server)${NC}"
-read -p "Check alerts? (yes/no): " check_alerts
+echo ""
+read -p "Would you like to check for alerts now? (yes/no): " check_alerts
 
 if [ "$check_alerts" = "yes" ]; then
-    if [ -n "$WAZUH_SERVER" ]; then
-        echo ""
-        echo "Checking Wazuh server for alerts..."
-        ssh "$WAZUH_SERVER" "sudo tail -n 100 /var/ossec/logs/alerts/alerts.log | grep -A 5 'Rule: 100001\\|Rule: 100002\\|Rule: 100003'" || \
-            echo -e "${RED}Could not connect to Wazuh server${NC}"
-    else
-        echo -e "${YELLOW}Set WAZUH_SERVER environment variable to enable automatic checking${NC}"
-        echo "Example: export WAZUH_SERVER='ubuntu@10.0.1.100'"
-    fi
+    check_wazuh_alerts "100001\|100002\|100003"
 fi
 
 echo ""
-echo -e "${GREEN}[✓] SSH Brute Force Simulation Complete!${NC}"
+log_info "SSH Brute Force Simulation Complete!"
 echo ""
-
-# Cleanup function
-cleanup() {
-    echo "Cleaning up..."
-    rm -f "$TEMP_PASS_FILE" 2>/dev/null || true
-}
-
-trap cleanup EXIT
