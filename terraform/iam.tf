@@ -1,8 +1,5 @@
-# IAM role for Wazuh server
-resource "aws_iam_role" "wazuh_server_role" {
-  name = "${var.project_name}-wazuh-server-role"
-
-  assume_role_policy = jsonencode({
+locals {
+  ec2_assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
@@ -14,6 +11,13 @@ resource "aws_iam_role" "wazuh_server_role" {
       }
     ]
   })
+}
+
+# IAM role for Wazuh server
+resource "aws_iam_role" "wazuh_server_role" {
+  name = "${var.project_name}-wazuh-server-role"
+
+  assume_role_policy = local.ec2_assume_role_policy
 
   tags = {
     Name = "${var.project_name}-wazuh-server-role"
@@ -36,18 +40,7 @@ resource "aws_iam_instance_profile" "wazuh_server_profile" {
 resource "aws_iam_role" "endpoint_role" {
   name = "${var.project_name}-endpoint-role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
+  assume_role_policy = local.ec2_assume_role_policy
 
   tags = {
     Name = "${var.project_name}-endpoint-role"
