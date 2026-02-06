@@ -38,9 +38,9 @@ echo "Simulations to be executed:"
 echo "  1. SSH Brute Force (T1110)"
 echo "  2. Privilege Escalation (T1548.003)"
 echo ""
-read -p "Are you ABSOLUTELY sure you want to continue? (type 'YES' to confirm): " confirm
+read -p "Are you ABSOLUTELY sure you want to continue? (type 'yes' to confirm): " confirm
 
-if [ "$confirm" != "YES" ]; then
+if [ "$confirm" != "yes" ]; then
     echo -e "${YELLOW}Simulation cancelled.${NC}"
     exit 0
 fi
