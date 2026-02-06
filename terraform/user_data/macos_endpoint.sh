@@ -16,7 +16,7 @@
 set -e
 
 # Configuration
-WAZUH_VERSION="4.7.0"
+WAZUH_VERSION="4.7.2"
 WAZUH_SERVER="${wazuh_server_ip}"
 AGENT_NAME="${agent_name}"
 LOG_FILE="/var/log/wazuh-setup.log"
