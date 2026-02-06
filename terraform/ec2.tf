@@ -101,7 +101,7 @@ resource "null_resource" "deploy_detection_rules" {
       "echo '============================================='",
       "echo 'Deploying Custom Detection Rules...'",
       "echo '============================================='",
-      
+
       # Deploy our custom rules (renumbered to 200xxx range)
       "sudo mv /tmp/local_rules.xml /var/ossec/etc/rules/local_rules.xml",
       "sudo mv /tmp/macos_rules.xml /var/ossec/etc/rules/macos_rules.xml",
@@ -110,7 +110,7 @@ resource "null_resource" "deploy_detection_rules" {
       "sudo chmod 660 /var/ossec/etc/rules/local_rules.xml",
       "sudo chmod 660 /var/ossec/etc/rules/macos_rules.xml",
       "echo '✓ Custom rules deployed (73 rules, ID range: 200xxx)'",
-      
+
       # Install SOCFortress community rules
       "echo ''",
       "echo 'Installing SOCFortress Community Rules...'",
@@ -120,13 +120,13 @@ resource "null_resource" "deploy_detection_rules" {
       "chmod +x wazuh_socfortress_rules.sh",
       "sudo bash wazuh_socfortress_rules.sh",
       "echo '✓ SOCFortress rules installed'",
-      
+
       # Restart Wazuh manager to load all rules
       "echo ''",
       "echo 'Restarting Wazuh manager to load all rules...'",
       "sudo systemctl restart wazuh-manager",
       "sleep 10",
-      
+
       # Verify rules loaded
       "echo ''",
       "echo '============================================='",
@@ -212,4 +212,103 @@ resource "aws_instance" "windows_endpoint" {
   }
 
   depends_on = [aws_instance.wazuh_server]
+}
+
+# macOS EC2 Instance Configuration
+# IMPORTANT: macOS on AWS requires Dedicated Hosts and is NOT free tier eligible
+# Costs: ~$1.083/hour ($26/day, $780/month) - Minimum lease: 24 hours
+
+# Dedicated Host for macOS (required by Apple licensing)
+resource "aws_ec2_host" "macos_host" {
+  count = var.enable_macos_endpoint ? 1 : 0
+
+  instance_type     = "mac1.metal" # Intel Mac, or "mac2.metal" for Apple Silicon
+  availability_zone = "${var.aws_region}a"
+
+  # Auto-placement allows instances to target this host automatically
+  auto_placement = "on"
+
+  # Host recovery - automatically restart on underlying hardware failure
+  host_recovery = "on"
+
+  tags = {
+    Name        = "${var.project_name}-macos-dedicated-host"
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "terraform"
+    CostCenter  = "security-lab"
+  }
+}
+
+# Get latest macOS AMI
+data "aws_ami" "macos" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ec2-macos-13.*"] # macOS Ventura 13.x
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64_mac"] # Intel Mac, use "arm64_mac" for Apple Silicon
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
+# macOS EC2 Instance
+resource "aws_instance" "macos_endpoint" {
+  count = var.enable_macos_endpoint ? 1 : 0
+
+  ami           = data.aws_ami.macos.id
+  instance_type = "mac1.metal"
+
+  # Must run on dedicated host
+  host_id = aws_ec2_host.macos_host[0].id
+
+  subnet_id                   = aws_subnet.private_subnet.id
+  vpc_security_group_ids      = [aws_security_group.linux_endpoint_sg.id]
+  associate_public_ip_address = false
+
+  key_name = var.ssh_key_name
+
+  # Root volume - macOS requires at least 60GB
+  root_block_device {
+    volume_size           = var.macos_volume_size
+    volume_type           = "gp3"
+    encrypted             = true
+    delete_on_termination = true
+  }
+
+  # User data for macOS (runs as launchd script)
+  user_data = base64encode(templatefile("${path.module}/user_data/macos_endpoint.sh", {
+    wazuh_server_ip = aws_instance.wazuh_server.private_ip
+    agent_name      = "macos-endpoint-01"
+  }))
+
+  tags = {
+    Name        = "${var.project_name}-macos-endpoint-01"
+    Environment = var.environment
+    OS          = "macOS"
+    Role        = "monitored-endpoint"
+    Project     = var.project_name
+    ManagedBy   = "terraform"
+  }
+
+  # macOS instances take longer to boot
+  timeouts {
+    create = var.macos_create_timeout
+  }
+
+  depends_on = [aws_ec2_host.macos_host]
 }
