@@ -13,7 +13,7 @@ variable "environment" {
 variable "project_name" {
   description = "Project name for resource naming"
   type        = string
-  default     = "cloud-soc"
+  default     = "cloud-native-soc-platform"
 }
 
 variable "vpc_cidr" {
@@ -62,4 +62,40 @@ variable "ssh_private_key_path" {
   description = "Path to SSH private key for provisioner connections"
   type        = string
   default     = "~/.ssh/cloud-soc-key.pem"
+}
+
+variable "enable_macos_endpoint" {
+  description = "Enable macOS endpoint (requires dedicated host, NOT free tier)"
+  type        = bool
+  default     = false
+}
+
+variable "wazuh_volume_size" {
+  description = "Root volume size for Wazuh server (GB)"
+  type        = number
+  default     = 30
+}
+
+variable "endpoint_volume_size" {
+  description = "Root volume size for endpoints (GB)"
+  type        = number
+  default     = 10
+}
+
+variable "macos_volume_size" {
+  description = "Root volume size for macOS endpoint (GB)"
+  type        = number
+  default     = 100
+}
+
+variable "wazuh_init_wait_seconds" {
+  description = "Seconds to wait for Wazuh initialization"
+  type        = number
+  default     = 120
+}
+
+variable "macos_create_timeout" {
+  description = "Timeout for macOS instance creation"
+  type        = string
+  default     = "30m"
 }
