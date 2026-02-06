@@ -39,8 +39,23 @@ output "ssh_commands" {
 output "setup_summary" {
   description = "Quick reference for next steps"
   value = {
-    wazuh_dashboard = "https://${aws_instance.wazuh_server.public_ip}"
+    wazuh_dashboard  = "https://${aws_instance.wazuh_server.public_ip}"
     credentials_file = "SSH to Wazuh server and run: sudo tar -xvf wazuh-install-files.tar && sudo cat wazuh-install-files/wazuh-passwords.txt"
-    next_steps = "1) Wait ~10 min for installation, 2) Retrieve credentials, 3) Access dashboard, 4) Configure detection rules"
+    next_steps       = "1) Wait ~10 min for installation, 2) Retrieve credentials, 3) Access dashboard, 4) Configure detection rules"
   }
+}
+
+output "macos_endpoint_private_ip" {
+  description = "Private IP of macOS endpoint (if enabled)"
+  value       = var.enable_macos_endpoint ? aws_instance.macos_endpoint[0].private_ip : "Not enabled - set enable_macos_endpoint = true to deploy"
+}
+
+output "macos_dedicated_host_id" {
+  description = "Dedicated Host ID for macOS (if enabled)"
+  value       = var.enable_macos_endpoint ? aws_ec2_host.macos_host[0].id : "Not enabled - set enable_macos_endpoint = true to deploy"
+}
+
+output "macos_cost_warning" {
+  description = "Cost warning for macOS endpoint"
+  value       = var.enable_macos_endpoint ? "WARNING: $1.083/hour (~$26/day, ~$780/month) - DESTROY WHEN NOT IN USE!" : "macOS endpoint not enabled (no cost)"
 }
