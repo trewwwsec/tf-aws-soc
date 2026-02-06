@@ -30,16 +30,6 @@ data "aws_ami" "windows" {
   }
 }
 
-# Shared SSH connection settings for provisioners
-locals {
-  ssh_connection = {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = file(var.ssh_private_key_path)
-    host        = aws_instance.wazuh_server.public_ip
-  }
-}
-
 # Wazuh Server
 resource "aws_instance" "wazuh_server" {
   ami                    = data.aws_ami.ubuntu.id
@@ -84,7 +74,12 @@ resource "null_resource" "deploy_detection_rules" {
     source      = "${path.module}/../wazuh/custom_rules/local_rules.xml"
     destination = "/tmp/local_rules.xml"
 
-    connection = local.ssh_connection
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.ssh_private_key_path)
+      host        = aws_instance.wazuh_server.public_ip
+    }
   }
 
   # Copy macos_rules.xml
@@ -92,7 +87,12 @@ resource "null_resource" "deploy_detection_rules" {
     source      = "${path.module}/../wazuh/custom_rules/macos_rules.xml"
     destination = "/tmp/macos_rules.xml"
 
-    connection = local.ssh_connection
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.ssh_private_key_path)
+      host        = aws_instance.wazuh_server.public_ip
+    }
   }
 
   # Deploy rules and restart Wazuh
@@ -149,7 +149,12 @@ resource "null_resource" "deploy_detection_rules" {
       "echo 'Total: 2000+ MITRE ATT&CK mapped rules'"
     ]
 
-    connection = local.ssh_connection
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.ssh_private_key_path)
+      host        = aws_instance.wazuh_server.public_ip
+    }
   }
 }
 
