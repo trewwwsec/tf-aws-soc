@@ -2,7 +2,7 @@
 aws_region = "us-east-1"
 
 # Your public IP for SSH access (IMPORTANT!)
-allowed_ssh_cidr = ["102.129.232.31/32"]
+allowed_ssh_cidr = ["YOUR.PUBLIC.IP/32"]
 
 # SSH Key Configuration
 ssh_key_name         = "cloud-soc-key"
