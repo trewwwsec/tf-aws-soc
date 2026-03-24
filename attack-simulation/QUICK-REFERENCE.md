@@ -17,6 +17,10 @@ cd tf-aws-soc/attack-simulation
 
 # Or run all Linux simulations
 ./run-all-linux.sh
+
+# Or from the repo root, run a full end-to-end validation
+./scripts/run_end_to_end_detection_test.sh --simulation privilege-escalation
+./scripts/run_end_to_end_detection_test.sh --simulation ssh-brute-force
 ```
 
 ### Windows Simulations
@@ -58,8 +62,13 @@ tail -f /var/ossec/logs/alerts/alerts.log | grep "Rule: 200"
 
 ### 3. Verify Alerts
 ```bash
-# Check Wazuh dashboard or run on Wazuh server
-sudo grep "200020\|200021\|200022" /var/ossec/logs/alerts/alerts.log
+# Preferred: auto-discovery wrapper from the repo root
+./scripts/run_detection_smoke_test.sh --simulation privilege-escalation
+
+# Or use the API if WAZUH_HOST/WAZUH_USER/WAZUH_PASSWORD are set
+python3 scripts/smoke_test_detections.py \
+  --simulation privilege-escalation \
+  --mode api
 ```
 
 ### 4. Document Results

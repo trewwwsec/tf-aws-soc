@@ -46,6 +46,10 @@ cd tf-aws-soc/attack-simulation
 
 # Or run all Linux simulations
 ./run-all-linux.sh
+
+# Or from the repo root, run a full end-to-end validation
+./scripts/run_end_to_end_detection_test.sh --simulation privilege-escalation
+./scripts/run_end_to_end_detection_test.sh --simulation ssh-brute-force
 ```
 
 #### Windows Endpoint
@@ -89,20 +93,27 @@ cd tf-aws-soc/attack-simulation
 ### 1. Pre-Test Preparation
 ```bash
 # On Wazuh server - Start monitoring alerts
-tail -f /var/ossec/logs/alerts/alerts.log | grep "Rule: 100"
+tail -f /var/ossec/logs/alerts/alerts.log | grep "Rule: 200"
 ```
 
 ### 2. Run Simulation
 ```bash
 # On target endpoint
 ./ssh-brute-force.sh
+
+# Or from the repo root, run a full Linux end-to-end test
+./scripts/run_end_to_end_detection_test.sh --simulation privilege-escalation
 ```
 
 ### 3. Verify Detection
 ```bash
-# Check for expected alerts in Wazuh dashboard
-# Or via command line on Wazuh server
-sudo grep "200001" /var/ossec/logs/alerts/alerts.log
+# Preferred: use the auto-discovery helper from the repo root
+./scripts/run_detection_smoke_test.sh --simulation ssh-brute-force
+
+# Or query the Wazuh API directly
+python3 scripts/smoke_test_detections.py \
+  --simulation ssh-brute-force \
+  --mode api
 ```
 
 ### 4. Document Results

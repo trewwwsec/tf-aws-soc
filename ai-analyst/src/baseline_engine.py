@@ -892,7 +892,7 @@ def generate_mock_anomalous_events() -> List[Dict[str, Any]]:
             "rule": {
                 "level": 7,
                 "description": "Process execution detected",
-                "id": "100050",
+                "id": "200050",
                 "groups": ["local", "process_monitor"],
             },
             "agent": {"id": "001", "name": "linux-endpoint", "ip": "10.0.2.155"},
@@ -981,7 +981,7 @@ def generate_mock_anomalous_events() -> List[Dict[str, Any]]:
                 "rule": {
                     "level": 3,
                     "description": "Outbound connection detected",
-                    "id": "100100",
+                    "id": "200100",
                     "groups": ["network", "firewall"],
                 },
                 "agent": {"id": "001", "name": "linux-endpoint", "ip": "10.0.2.155"},
@@ -1012,7 +1012,7 @@ def generate_mock_anomalous_events() -> List[Dict[str, Any]]:
                 "rule": {
                     "level": 3,
                     "description": "DNS query detected",
-                    "id": "100200",
+                    "id": "200200",
                     "groups": ["dns", "network"],
                 },
                 "agent": {"id": "001", "name": "linux-endpoint", "ip": "10.0.2.155"},
@@ -1036,7 +1036,7 @@ def generate_mock_anomalous_events() -> List[Dict[str, Any]]:
                 "rule": {
                     "level": 1,
                     "description": "DNS query detected",
-                    "id": "100200",
+                    "id": "200200",
                     "groups": ["dns", "network"],
                 },
                 "agent": {"id": "001", "name": "linux-endpoint", "ip": "10.0.2.155"},
